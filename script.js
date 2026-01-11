@@ -498,10 +498,10 @@ function updateDifficulty() {
     // Increase speed every 500 points
     score += 0.1; // Slow score increment
 
-    // Time-based Speed Increase (Every 40s approx)
-    // 60fps * 40s = 2400 frames
-    if (frameCount % 2400 === 0 && frameCount > 0) {
-        gameSpeed += 0.5; // Mild increase
+    // Time-based Speed Increase (Every 10s approx)
+    // 60fps * 10s = 600 frames
+    if (frameCount % 600 === 0 && frameCount > 0) {
+        gameSpeed += 1; // Aggressive increase
     }
 
     // Still keep score-based increase or replace?
