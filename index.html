@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RioRacer: Dog vs Street</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="ui-overlay">
+            <img src="graphics/Game Cover.png" alt="RioRacer Cover" id="cover-image">
+            <h1 class="game-title">RioRacer</h1>
+            <p class="subtitle">Dog vs. Street</p>
+            <p class="start-highscore">High Score: <span id="start-highscore-value">0</span></p>
+            <button id="start-btn" class="primary-btn">PLAY!</button>
+        </div>
+
+        <!-- HUD (Heads Up Display) -->
+        <div id="hud" class="hidden">
+            <div id="score-container">
+                <span id="score-label">SCORE: </span><span id="score">0</span>
+            </div>
+            <div id="highscore-container">
+                <span id="highscore-label">HI: </span><span id="highscore">0</span>
+            </div>
+            <div id="highscore-alert" class="hidden">NEW HIGH SCORE!</div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="ui-overlay hidden">
+            <h1 class="game-over-title">GAME OVER!</h1>
+            <p id="final-score">Score: 0</p>
+            <button id="restart-btn" class="primary-btn">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
