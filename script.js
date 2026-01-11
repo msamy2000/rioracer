@@ -39,12 +39,7 @@ const GRAVITY = 0.6;
 let BASE_SCALE = 1;
 
 function calculateScale() {
-    // Target height 1080p, if smaller/larger, scale accordingly.
-    // But actually, we want the game to look "zoomed in" on mobile too?
-    // Let's make the player roughly 1/5th or 1/6th of the screen height? No that's huge.
-    // 1/8th of screen height seems reasonable for a runner character?
     BASE_SCALE = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT) / 800; // Base reference
-    // Better approach: Percentage of Height.
 }
 calculateScale();
 
@@ -82,132 +77,6 @@ dog2Img.src = 'graphics/obst_dog2.png';
 const bgImg = new Image();
 bgImg.src = 'graphics/background_seamless_v2.png';
 
-// ... [Existing UI Elements] ...
-
-// ... [Existing AudioController] ...
-
-// ... [Existing InputHandler and Player] ...
-
-// ... [Existing Background] ...
-
-// --- Obstacle Class ---
-class Obstacle {
-    constructor(xOffset) {
-        // Dynamic size 10-15% of screen height
-        let sizeFactor = CANVAS_HEIGHT * 0.10 + Math.random() * (CANVAS_HEIGHT * 0.05);
-        this.width = sizeFactor;
-        this.height = sizeFactor;
-
-        // Start exactly at screen edge + optional offset passed from spawner
-        this.x = CANVAS_WIDTH + (xOffset || 0);
-
-        // Align bottom with ground
-        this.y = CANVAS_HEIGHT - GROUND_HEIGHT - this.height;
-        this.markedForDeletion = false;
-
-        // Randomly choose Cat, Dog, or Dog2
-        const rand = Math.random();
-        if (rand < 0.33) {
-            this.type = 'cat';
-            this.image = catImg;
-        } else if (rand < 0.66) {
-            this.type = 'dog';
-            this.image = dogImg;
-        } else {
-            this.type = 'dog2';
-            this.image = dog2Img;
-        }
-
-        // Speed variation relative to gameSpeed
-        this.speedOffset = Math.random() * (CANVAS_WIDTH * 0.0005);
-    }
-    // ... [Rest of Obstacle class] ...
-    update() {
-        let currentRealSpeed = (CANVAS_WIDTH * 0.005) * (gameSpeed / 5);
-        this.x -= (currentRealSpeed + this.speedOffset);
-        if (this.x < -this.width) this.markedForDeletion = true;
-    }
-
-    draw() {
-        if (this.image.complete) {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-        } else {
-            ctx.fillStyle = this.type === 'cat' ? 'orange' : 'brown';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
-    }
-}
-
-// ...
-
-async function fetchLeaderboard() {
-    try {
-        const q = query(scoresCollectionRef, orderBy("score", "desc"), limit(10));
-        const querySnapshot = await getDocs(q);
-
-        leaderboardList.innerHTML = ""; // Clear existing
-        let count = 0;
-
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${count + 1}. ${data.name}</span> <span>${data.score}</span>`;
-            leaderboardList.appendChild(li);
-
-            // Track the lowest score in the top 10
-            if (count === querySnapshot.size - 1) {
-                lowestTop10Score = data.score;
-            }
-            count++;
-        });
-
-        // If less than 10 players, any score > 0 is a top score
-        if (count < 10) {
-            lowestTop10Score = 0;
-        }
-
-    } catch (e) {
-        console.error("Error fetching leaderboard:", e);
-        leaderboardList.innerHTML = "<li>Error loading scores.</li>";
-        // DEBUG: Alert user
-        if (!window.hasAlertedError) {
-            alert("Leaderboard Error: " + e.message);
-            window.hasAlertedError = true;
-        }
-    }
-}
-
-async function submitScore() {
-    const name = playerNameInput.value.trim() || "Anonymous";
-    const newScore = Math.floor(score);
-
-    if (newScore <= 0) return;
-
-    try {
-        submitScoreBtn.disabled = true;
-        submitScoreBtn.innerText = "SAVING...";
-
-        await addDoc(scoresCollectionRef, {
-            name: name,
-            score: newScore,
-            timestamp: new Date()
-        });
-
-        // Success
-        newRecordSection.classList.add('hidden'); // Hide input
-        fetchLeaderboard(); // Refresh list
-
-        // Save to local storage too
-        localStorage.setItem('rioRacerPlayerName', name);
-
-    } catch (e) {
-        console.error("Error saving score:", e);
-        submitScoreBtn.innerText = "ERROR";
-        submitScoreBtn.disabled = false;
-        alert("Save Error: " + e.message);
-    }
-}
-
 // UI Elements
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
@@ -219,6 +88,12 @@ const highScoreAlert = document.getElementById('highscore-alert');
 const finalScoreEl = document.getElementById('final-score');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
+
+// Leaderboard UI Elements
+const newRecordSection = document.getElementById('new-record-section');
+const playerNameInput = document.getElementById('player-name-input');
+const submitScoreBtn = document.getElementById('submit-score-btn');
+const leaderboardList = document.getElementById('leaderboard-list');
 
 // --- Audio Controller ---
 class AudioController {
@@ -455,12 +330,20 @@ class Obstacle {
         this.y = CANVAS_HEIGHT - GROUND_HEIGHT - this.height;
         this.markedForDeletion = false;
 
-        // Randomly choose Cat or Dog
-        this.type = Math.random() < 0.5 ? 'cat' : 'dog';
-        this.image = this.type === 'cat' ? catImg : dogImg;
+        // Randomly choose Cat, Dog, or Dog2
+        const rand = Math.random();
+        if (rand < 0.33) {
+            this.type = 'cat';
+            this.image = catImg;
+        } else if (rand < 0.66) {
+            this.type = 'dog';
+            this.image = dogImg;
+        } else {
+            this.type = 'dog2';
+            this.image = dog2Img;
+        }
 
         // Speed variation relative to gameSpeed
-        // REDUCED variation to prevent overlapping after spawn
         this.speedOffset = Math.random() * (CANVAS_WIDTH * 0.0005);
     }
 
@@ -504,11 +387,8 @@ function handleObstacles(deltaTime) {
     // This is approximate because vy is initial velocity.
     // Note: Variables scale dynamically, so we calculate fresh.
     let jf = Math.abs(JUMP_FORCE);
-    let g = GRAVITY; // Wait, GRAVITY is constant 0.6 in file? 
-    // Ah, JUMP_FORCE and g are modified by BASE_SCALE which is global now?
-    // Looking at previous edits: GRAVITY = 0.6 constant, JUMP_FORCE via `calculateScale`.
-    // Wait, in `update` Player uses `CANVAS_HEIGHT * 0.0012` for gravity update.
-    // So "0.6" at top might be unused or fallback? 
+    let g = GRAVITY;
+
     // Let's use the Values actually used in Player.update:
     let usedGravity = (CANVAS_HEIGHT * 0.0012);
     let usedJumpForce = Math.abs(CANVAS_HEIGHT * 0.022);
@@ -579,11 +459,6 @@ function displayScore() {
 
 function updateDifficulty() {
     // Increase speed every 500 points
-    // Base speed is 5.
-    // score increases by 0.1 per frame approx? Or just distance.
-    // Let's just say score increases by 1 every 10 frames? 
-    // Or just score += gameSpeed * 0.01
-
     score += 0.1; // Slow score increment
 
     const difficultyLevel = Math.floor(score / 500);
@@ -655,12 +530,6 @@ function animate() {
 // --- Leaderboard Logic ---
 const scoresCollectionRef = collection(db, "scores");
 
-// NEW UI ELEMENTS
-const newRecordSection = document.getElementById('new-record-section');
-const playerNameInput = document.getElementById('player-name-input');
-const submitScoreBtn = document.getElementById('submit-score-btn');
-const leaderboardList = document.getElementById('leaderboard-list');
-
 let lowestTop10Score = 0;
 
 async function fetchLeaderboard() {
@@ -692,6 +561,11 @@ async function fetchLeaderboard() {
     } catch (e) {
         console.error("Error fetching leaderboard:", e);
         leaderboardList.innerHTML = "<li>Error loading scores.</li>";
+        // DEBUG: Alert user
+        if (!window.hasAlertedError) {
+            alert("Leaderboard Error: " + e.message);
+            window.hasAlertedError = true;
+        }
     }
 }
 
@@ -722,6 +596,7 @@ async function submitScore() {
         console.error("Error saving score:", e);
         submitScoreBtn.innerText = "ERROR";
         submitScoreBtn.disabled = false;
+        alert("Save Error: " + e.message);
     }
 }
 
