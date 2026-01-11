@@ -274,6 +274,15 @@ canvas {
     text-shadow: 1px 1px 0 #000;
 }
 
+.version-tag {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: var(--font-body);
+}
+
 #player-name-input {
     padding: 10px;
     font-size: 1.2rem;

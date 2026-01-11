@@ -610,7 +610,11 @@ function updateDifficulty() {
     if (gameSpeed > 25) gameSpeed = 25;
 }
 
+let isAnimating = false;
+
 function animate() {
+    isAnimating = true;
+
     // Clear
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -621,31 +625,31 @@ function animate() {
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
 
-        calculateScale(); // Recalculate physics constants
-        player.resize(); // Update player size and position
+        calculateScale();
+        player.resize();
     }
 
     if (currentState === GameState.PLAYING) {
         // Update
         background.update();
         player.update(input);
-
         updateDifficulty();
         frameCount++;
 
-        // Draw Background First
+        // Draw Background
         background.draw();
 
-        // Draw Ground (Simple rect for now to clearly define "Street")
-        ctx.fillStyle = '#555'; // Asphalt color
+        // Draw Ground
+        ctx.fillStyle = '#555';
         ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
-        // Dashed line
+
+        // Dashed line (Moving)
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 5;
         ctx.setLineDash([40, 40]);
         ctx.beginPath();
         ctx.moveTo(0, CANVAS_HEIGHT - GROUND_HEIGHT + 20);
-        ctx.lineTo(CANVAS_WIDTH + (frameCount * gameSpeed) % 80, CANVAS_HEIGHT - GROUND_HEIGHT + 20); // Moving line effect
+        ctx.lineTo(CANVAS_WIDTH + (frameCount * gameSpeed) % 80, CANVAS_HEIGHT - GROUND_HEIGHT + 20);
         ctx.stroke();
 
         // Draw Player
@@ -656,19 +660,16 @@ function animate() {
 
         // UI
         displayScore();
-
-        requestAnimationFrame(animate);
     } else {
-        // MENU or GAMEOVER: Draw static but keep loop for responsiveness (resize/background tiles)
+        // MENU or GAMEOVER: Draw static but keep loop for responsiveness
         background.draw();
-        // Ground
         ctx.fillStyle = '#555';
         ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
-
         player.draw();
-
-        requestAnimationFrame(animate);
     }
+
+    // SINGLE requestAnimationFrame call for the entire function
+    requestAnimationFrame(animate);
 }
 
 // --- Leaderboard Logic ---
@@ -841,5 +842,5 @@ ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
 player.draw();
 highScoreEl.innerText = Math.floor(highScore);
 
-// Start the single, persistent game loop
-animate();
+// Start the single, persistent game loop if not already running
+if (!isAnimating) animate();
