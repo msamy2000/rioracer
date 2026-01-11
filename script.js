@@ -97,7 +97,7 @@ const heroImg = new Image();
 heroImg.src = 'graphics/hero.jpg';
 
 const heroStartImg = new Image();
-heroStartImg.src = 'graphics/hero start.png';
+heroStartImg.src = 'graphics/hero_start.png';
 
 const catImg = new Image();
 catImg.src = 'graphics/obst_Cat.jpg';
@@ -658,14 +658,16 @@ function animate() {
         displayScore();
 
         requestAnimationFrame(animate);
-    } else if (currentState === GameState.MENU) {
-        // Just draw background static
+    } else {
+        // MENU or GAMEOVER: Draw static but keep loop for responsiveness (resize/background tiles)
         background.draw();
         // Ground
         ctx.fillStyle = '#555';
         ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
-        // Prompt
-        // UI overlay covers this
+
+        player.draw();
+
+        requestAnimationFrame(animate);
     }
 }
 
@@ -833,7 +835,10 @@ restartBtn.addEventListener('click', resetGame);
 
 // Initial Draw & Setup
 // startHighScoreEl value is set by fetchLeaderboard
+calculateScale();
+player.resize();
 background.draw();
 ctx.fillStyle = '#555';
 ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
+player.draw();
 highScoreEl.innerText = Math.floor(highScore);
