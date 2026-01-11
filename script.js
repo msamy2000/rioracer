@@ -59,6 +59,7 @@ let gameSpeed = 5;
 let score = 0;
 let highScore = 0; // GLOBAL ONLY - Initialized by fetchLeaderboard
 let highScoreBroken = false; // Track if we broke it this run
+let highScoreAlertShown = false;
 let frameCount = 0;
 let timeSinceStart = 0; // Track time for speed increase
 
