@@ -34,6 +34,12 @@ let CANVAS_HEIGHT = window.innerHeight;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
+// Physics and Scaling
+const GRAVITY = 0.6;
+let BASE_SCALE = 1;
+let JUMP_FORCE = 0;
+let GROUND_HEIGHT = 0;
+
 // Scaling Factors
 let GROUND_HEIGHT_PERCENT = 0.15;
 let PLAYER_HEIGHT_PERCENT = 0.15;
