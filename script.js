@@ -57,9 +57,8 @@ const GameState = {
 let currentState = GameState.MENU;
 let gameSpeed = 5;
 let score = 0;
-let highScore = parseInt(localStorage.getItem('rioRacerHighScore')) || 0;
+let highScore = 0; // GLOBAL ONLY - Initialized by fetchLeaderboard
 let highScoreBroken = false; // Track if we broke it this run
-let highScoreAlertShown = false;
 let frameCount = 0;
 let timeSinceStart = 0; // Track time for speed increase
 
@@ -663,9 +662,11 @@ async function fetchLeaderboard() {
             li.innerHTML = `<span>${count + 1}. ${data.name}</span> <span>${data.score}</span>`;
             leaderboardList.appendChild(li);
 
-            // Sync Start Screen with Global Best
+            // Sync Start Screen & global variable with Global Best (Active score to beat)
             if (count === 0) {
                 startHighScoreEl.innerText = `${data.score}`;
+                highScore = data.score;
+                highScoreEl.innerText = `${Math.floor(highScore)}`; // Sync HUD too
             }
 
             // Track the lowest score in the top 10
@@ -761,11 +762,8 @@ function gameOver() {
     // Hide input by default
     newRecordSection.classList.add('hidden');
 
-    // Local High Score
-    if (score > highScore) {
-        highScore = Math.floor(score);
-        localStorage.setItem('rioRacerHighScore', highScore);
-    }
+    // Strict Global Score: No Local Storage Update needed.
+    // We only care if we made the Top 10 list.
 
     // Check if score qualifies for Top 10
     // If we have less than 10 scores OR score > lowestTop10Score
@@ -805,18 +803,10 @@ function resetGame() {
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', resetGame);
 
-// Reset Score Logic
-const resetScoreBtn = document.getElementById('reset-score-btn');
-resetScoreBtn.addEventListener('click', () => {
-    localStorage.removeItem('rioRacerHighScore');
-    highScore = 0;
-    startHighScoreEl.innerText = "0";
-    highScoreEl.innerText = "0";
-    alert("Local High Score Reset to 0!");
-});
+// Removed Reset Local Score Button Logic
 
 // Initial Draw & Setup
-startHighScoreEl.innerText = Math.floor(highScore);
+// startHighScoreEl value is set by fetchLeaderboard
 background.draw();
 ctx.fillStyle = '#555';
 ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
