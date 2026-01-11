@@ -65,17 +65,59 @@ let score = 0;
 let highScore = parseInt(localStorage.getItem('rioRacerHighScore')) || 0;
 let frameCount = 0;
 
+// --- DEBUG CONSOLE (FOR PRODUCTION) ---
+const debugDiv = document.createElement('div');
+debugDiv.style.position = 'fixed';
+debugDiv.style.top = '0';
+debugDiv.style.left = '0';
+debugDiv.style.width = '100%';
+debugDiv.style.height = '150px';
+debugDiv.style.background = 'rgba(0,0,0,0.8)';
+debugDiv.style.color = '#0f0';
+debugDiv.style.fontFamily = 'monospace';
+debugDiv.style.fontSize = '12px';
+debugDiv.style.overflowY = 'scroll';
+debugDiv.style.zIndex = '9999';
+debugDiv.style.pointerEvents = 'none'; // Click through
+document.body.appendChild(debugDiv);
+
+function logToScreen(msg) {
+    const p = document.createElement('p');
+    p.style.margin = '2px 0';
+    p.innerText = `> ${msg}`;
+    debugDiv.appendChild(p);
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    console.log(msg);
+}
+
+// Override console
+window.onerror = function (msg, url, line) {
+    logToScreen(`ERROR: ${msg} (${line})`);
+    return false;
+};
+
+logToScreen("Initializing Game...");
+logToScreen(`Viewport: ${window.innerWidth}x${window.innerHeight}`);
+
 // Assets
 const heroImg = new Image();
+heroImg.onload = () => logToScreen(`Hero Loaded: ${heroImg.naturalWidth}x${heroImg.naturalHeight}`);
+heroImg.onerror = () => logToScreen("Hero Error!");
 heroImg.src = 'graphics/hero.png';
 
 const catImg = new Image();
+catImg.onload = () => logToScreen(`Cat Loaded: ${catImg.naturalWidth}x${catImg.naturalHeight}`);
+catImg.onerror = () => logToScreen("Cat Error!");
 catImg.src = 'graphics/obst_Cat.png';
 
 const dogImg = new Image();
+dogImg.onload = () => logToScreen(`Dog Loaded: ${dogImg.naturalWidth}x${dogImg.naturalHeight}`);
+dogImg.onerror = () => logToScreen("Dog Error!");
 dogImg.src = 'graphics/obst_Dog.png';
 
 const bgImg = new Image();
+bgImg.onload = () => logToScreen(`BG Loaded: ${bgImg.naturalWidth}x${bgImg.naturalHeight}`);
+bgImg.onerror = () => logToScreen("BG Error!");
 bgImg.src = 'graphics/background_seamless_v2.png';
 
 // UI Elements
