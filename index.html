@@ -39,6 +39,21 @@
         <div id="game-over-screen" class="ui-overlay hidden">
             <h1 class="game-over-title">GAME OVER!</h1>
             <p id="final-score">Score: 0</p>
+
+            <div id="new-record-section" class="hidden">
+                <p class="record-msg">You made the Top 10!</p>
+                <input type="text" id="player-name-input" placeholder="Enter Name" maxlength="10">
+                <button id="submit-score-btn" class="primary-btn small-btn">SAVE</button>
+            </div>
+
+            <div id="leaderboard-container">
+                <h3>TOP 10 PLAYERS</h3>
+                <ul id="leaderboard-list">
+                    <!-- Configured via JS -->
+                    <li>Loading...</li>
+                </ul>
+            </div>
+
             <button id="restart-btn" class="primary-btn">TRY AGAIN</button>
         </div>
     </div>

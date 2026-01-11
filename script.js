@@ -5,7 +5,10 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, addDoc, query, orderBy, limit, getDocs
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDWyv1VmQcOD7bwhAfleqQenAHSWsfiN3U",
@@ -516,66 +519,84 @@ function animate() {
     }
 }
 
-// Firestore References
-const globalScoreDocRef = doc(db, "scores", "global");
+// --- Leaderboard Logic ---
+const scoresCollectionRef = collection(db, "scores");
 
-// Global State
-let globalHighScore = 0;
+// NEW UI ELEMENTS
+const newRecordSection = document.getElementById('new-record-section');
+const playerNameInput = document.getElementById('player-name-input');
+const submitScoreBtn = document.getElementById('submit-score-btn');
+const leaderboardList = document.getElementById('leaderboard-list');
 
-async function fetchGlobalHighScore() {
+let lowestTop10Score = 0;
+
+async function fetchLeaderboard() {
     try {
-        const docSnap = await getDoc(globalScoreDocRef);
-        if (docSnap.exists()) {
-            globalHighScore = docSnap.data().value || 0;
-            // Update UI if we have a specific element for it, or just log for now
-            // Let's create a visual indicator for "World Record"
-            updateWorldRecordUI();
-        } else {
-            // Create if doesn't exist
-            await setDoc(globalScoreDocRef, { value: 0 });
+        const q = query(scoresCollectionRef, orderBy("score", "desc"), limit(10));
+        const querySnapshot = await getDocs(q);
+
+        leaderboardList.innerHTML = ""; // Clear existing
+        let count = 0;
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${count + 1}. ${data.name}</span> <span>${data.score}</span>`;
+            leaderboardList.appendChild(li);
+
+            // Track the lowest score in the top 10
+            if (count === querySnapshot.size - 1) {
+                lowestTop10Score = data.score;
+            }
+            count++;
+        });
+
+        // If less than 10 players, any score > 0 is a top score
+        if (count < 10) {
+            lowestTop10Score = 0;
         }
+
     } catch (e) {
-        console.error("Error fetching global score:", e);
+        console.error("Error fetching leaderboard:", e);
+        leaderboardList.innerHTML = "<li>Error loading scores.</li>";
     }
 }
 
-async function checkAndSaveGlobalScore(newScore) {
-    if (newScore > globalHighScore) {
-        globalHighScore = newScore;
-        updateWorldRecordUI();
+async function submitScore() {
+    const name = playerNameInput.value.trim() || "Anonymous";
+    const newScore = Math.floor(score);
 
-        try {
-            await setDoc(globalScoreDocRef, { value: newScore });
-            // Maybe show a special "WORLD RECORD!" alert?
-            highScoreAlert.innerText = "WORLD RECORD BROKEN!";
-            highScoreAlert.style.color = "#FFD700"; // Gold
-            highScoreAlertShown = false; // Allow showing again if needed
-        } catch (e) {
-            console.error("Error updating global score:", e);
-        }
+    if (newScore <= 0) return;
+
+    try {
+        submitScoreBtn.disabled = true;
+        submitScoreBtn.innerText = "SAVING...";
+
+        await addDoc(scoresCollectionRef, {
+            name: name,
+            score: newScore,
+            timestamp: new Date()
+        });
+
+        // Success
+        newRecordSection.classList.add('hidden'); // Hide input
+        fetchLeaderboard(); // Refresh list
+
+        // Save to local storage too
+        localStorage.setItem('rioRacerPlayerName', name);
+
+    } catch (e) {
+        console.error("Error saving score:", e);
+        submitScoreBtn.innerText = "ERROR";
+        submitScoreBtn.disabled = false;
     }
 }
 
-function updateWorldRecordUI() {
-    // Append World Record to Start Screen logic
-    // We might need a new UI element for this.
-    // For now, let's just make the "High Score" text show "World Record: X"
-    // Or add a separate line.
+// Bind Submit Button
+submitScoreBtn.addEventListener('click', submitScore);
 
-    // Let's modify the start screen text dynamically
-    const wrText = `World Record: ${globalHighScore}`;
-    // If we want to display it properly, we should add an element.
-    // I'll append it to the existing high score element text or create a new one via DOM if it doesn't exist?
-    // Safer to just log it for now or append to subtitle.
-
-    // Quick Hack: Update the Start Screen High Score label to show both
-    // "Personal: 100 | World: 500"
-    startHighScoreEl.innerText = `${Math.floor(highScore)} | World: ${Math.floor(globalHighScore)}`;
-    highScoreEl.innerText = `${Math.floor(highScore)} (WR: ${Math.floor(globalHighScore)})`;
-}
-
-// Initialize Global Score
-fetchGlobalHighScore();
+// Initialize
+fetchLeaderboard();
 
 function startGame() {
     audio.init();
@@ -585,12 +606,12 @@ function startGame() {
     hud.classList.remove('hidden');
 
     // Ensure HUD shows current high score
-    highScoreEl.innerText = `${Math.floor(highScore)} (WR: ${Math.floor(globalHighScore)})`;
+    highScoreEl.innerText = Math.floor(highScore);
 
     gameSpeed = 5;
     score = 0;
     highScoreAlertShown = false;
-    highScoreAlert.innerText = "NEW HIGH SCORE!"; // Reset text
+    highScoreAlert.innerText = "NEW HIGH SCORE!";
     highScoreAlert.style.color = "yellow";
 
     obstacles = [];
@@ -607,23 +628,37 @@ function gameOver() {
     finalScoreEl.innerText = "Score: " + Math.floor(score);
     audio.playCrash();
 
+    // Hide input by default
+    newRecordSection.classList.add('hidden');
+
     // Local High Score
     if (score > highScore) {
         highScore = Math.floor(score);
         localStorage.setItem('rioRacerHighScore', highScore);
     }
 
-    // Global High Score Check
-    checkAndSaveGlobalScore(Math.floor(score));
+    // Check if score qualifies for Top 10
+    // If we have less than 10 scores OR score > lowestTop10Score
+    const currentScore = Math.floor(score);
+    if (currentScore > 0 && currentScore >= lowestTop10Score) {
+        newRecordSection.classList.remove('hidden');
+        playerNameInput.value = localStorage.getItem('rioRacerPlayerName') || "";
+        submitScoreBtn.disabled = false;
+        submitScoreBtn.innerText = "SAVE";
+        audio.playHighScore(); // Play happy sound
+    } else {
+        // Just refresh leaderboard to be sure
+        fetchLeaderboard();
+    }
 
-    startHighScoreEl.innerText = `${Math.floor(highScore)} | World: ${Math.floor(globalHighScore)}`;
+    startHighScoreEl.innerText = `${Math.floor(highScore)}`;
 }
 
 function resetGame() {
     currentState = GameState.MENU;
     gameOverScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
-    startHighScoreEl.innerText = `${Math.floor(highScore)} | World: ${Math.floor(globalHighScore)}`;
+    startHighScoreEl.innerText = `${Math.floor(highScore)}`;
 
     // Reset player
     player.y = CANVAS_HEIGHT - GROUND_HEIGHT - player.height;
@@ -633,7 +668,7 @@ function resetGame() {
     background.draw();
     ctx.fillStyle = '#555';
     ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
-    fetchGlobalHighScore(); // Refresh in case someone else played
+    fetchLeaderboard(); // Refresh
 }
 
 // Event Listeners for Buttons

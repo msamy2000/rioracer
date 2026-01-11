@@ -198,6 +198,82 @@ canvas {
     }
 }
 
+/* Leaderboard */
+#leaderboard-container {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: 300px;
+    text-align: center;
+}
+
+#leaderboard-container h3 {
+    font-family: var(--font-heading);
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0 #000;
+}
+
+#leaderboard-list {
+    list-style: none;
+    color: white;
+    font-family: var(--font-body);
+    font-weight: bold;
+    text-align: left;
+}
+
+#leaderboard-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* New Record Input */
+#new-record-section {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 215, 0, 0.2);
+    /* Gold tint */
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid gold;
+}
+
+.record-msg {
+    color: gold;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    text-shadow: 1px 1px 0 #000;
+}
+
+#player-name-input {
+    padding: 10px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    border: none;
+    text-align: center;
+    font-family: var(--font-heading);
+    width: 200px;
+}
+
+.small-btn {
+    font-size: 1rem !important;
+    padding: 0.5rem 1.5rem !important;
+    background-color: #1E90FF !important;
+    /* Blue for save */
+    box-shadow: 0 4px 0 #0f4c8a !important;
+}
+
+.small-btn:active {
+    box-shadow: 0 2px 0 #0f4c8a !important;
+}
+
 /* Responsiveness */
 @media (max-width: 600px) {
     .game-title {
