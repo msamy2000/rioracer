@@ -200,6 +200,21 @@ canvas {
     }
 }
 
+.flash-animation {
+    animation: flash 0.5s ease-out;
+}
+
+@keyframes flash {
+    0% {
+        background-color: white;
+    }
+
+    100% {
+        background-color: #333;
+        /* Return to body bg */
+    }
+}
+
 /* Leaderboard */
 #leaderboard-container {
     background: rgba(0, 0, 0, 0.5);

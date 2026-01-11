@@ -155,43 +155,67 @@ class AudioController {
         oscillator.stop(this.ctx.currentTime + 0.15);
     }
 
-    playShiny() {
+    playFanfare() {
         if (!this.enabled || !this.ctx) return;
-        const oscillator = this.ctx.createOscillator();
-        const gainNode = this.ctx.createGain();
 
-        // Shiny magical sound (High Sine wave sweep + glissando sort of)
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(1200, this.ctx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.3);
+        // C Major Arpeggio Fanfare (C4, E4, G4, C5)
+        const notes = [
+            { freq: 523.25, time: 0.0, len: 0.1 }, // C5
+            { freq: 659.25, time: 0.1, len: 0.1 }, // E5
+            { freq: 783.99, time: 0.2, len: 0.1 }, // G5
+            { freq: 1046.50, time: 0.3, len: 0.4 } // C6 (High finish!)
+        ];
 
-        gainNode.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+        notes.forEach(note => {
+            const oscillator = this.ctx.createOscillator();
+            const gainNode = this.ctx.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
+            oscillator.type = 'triangle'; // Brighter sound
+            oscillator.frequency.value = note.freq;
 
-        oscillator.start();
-        oscillator.stop(this.ctx.currentTime + 0.4);
+            gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime + note.time);
+            gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + note.time + note.len);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(this.ctx.destination);
+
+            oscillator.start(this.ctx.currentTime + note.time);
+            oscillator.stop(this.ctx.currentTime + note.time + note.len);
+        });
     }
 
     playCrash() {
         if (!this.enabled || !this.ctx) return;
-        const oscillator = this.ctx.createOscillator();
-        const gainNode = this.ctx.createGain();
 
-        oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(100, this.ctx.currentTime);
-        oscillator.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
+        // Sarcastic "Wah Wah Wah" (Sad Trombone)
+        const notes = [
+            { freq: 440, time: 0.0, len: 0.4 }, // A4
+            { freq: 415, time: 0.4, len: 0.4 }, // G#4
+            { freq: 392, time: 0.8, len: 0.4 }, // G4
+            { freq: 370, time: 1.2, len: 1.0 }  // F#4 (Long slide)
+        ];
 
-        gainNode.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+        notes.forEach((note, i) => {
+            const oscillator = this.ctx.createOscillator();
+            const gainNode = this.ctx.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
+            oscillator.type = 'sawtooth'; // Buzzy sound
+            oscillator.frequency.value = note.freq;
 
-        oscillator.start();
-        oscillator.stop(this.ctx.currentTime + 0.3);
+            // Slide down on the last note
+            if (i === notes.length - 1) {
+                oscillator.frequency.linearRampToValueAtTime(note.freq - 50, this.ctx.currentTime + note.time + note.len);
+            }
+
+            gainNode.gain.setValueAtTime(0.2, this.ctx.currentTime + note.time);
+            gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + note.time + note.len);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(this.ctx.destination);
+
+            oscillator.start(this.ctx.currentTime + note.time);
+            oscillator.stop(this.ctx.currentTime + note.time + note.len);
+        });
     }
 
     playHighScore() {
@@ -228,7 +252,12 @@ class InputHandler {
             if (e.code === 'Space' || e.code === 'ArrowUp') {
                 this.jumpPressed = true;
                 if (currentState === GameState.MENU) startGame();
-                if (currentState === GameState.GAMEOVER && e.code === 'Space') resetGame();
+                if (currentState === GameState.GAMEOVER && e.code === 'Space') {
+                    // PREVENT ACCIDENTAL RESET: Only reset if name input is NOT visible
+                    if (newRecordSection.classList.contains('hidden')) {
+                        resetGame();
+                    }
+                }
             }
         });
 
@@ -527,12 +556,19 @@ function updateDifficulty() {
     if (highScore > 0 && score > highScore && !highScoreBroken) {
         highScoreBroken = true;
         player.image = heroImg; // Switch to "Strong" dog
-        audio.playShiny();
+        audio.playFanfare();
 
-        // Visual flare?
+        // CELEBRATION EFFECTS
         highScoreAlert.innerText = "RECORD BROKEN!";
-        highScoreAlert.style.color = "cyan";
-        highScoreAlertShown = false; // Trigger UI animation if handled
+        highScoreAlert.style.color = "#00FFFF";
+        highScoreAlert.style.transform = "scale(1.5)"; // Make it HUGE
+        highScoreAlertShown = false;
+
+        // Screen Flash
+        document.body.classList.add('flash-animation');
+        setTimeout(() => {
+            document.body.classList.remove('flash-animation');
+        }, 500);
     }
 
     // Time-based Speed Increase (Every 10s approx)
@@ -682,6 +718,11 @@ async function submitScore() {
 
 // Bind Submit Button
 submitScoreBtn.addEventListener('click', submitScore);
+
+// Allow Enter key to submit
+playerNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitScore();
+});
 
 // Initialize
 fetchLeaderboard();
