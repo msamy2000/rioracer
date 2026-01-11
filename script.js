@@ -627,6 +627,11 @@ async function fetchLeaderboard() {
             li.innerHTML = `<span>${count + 1}. ${data.name}</span> <span>${data.score}</span>`;
             leaderboardList.appendChild(li);
 
+            // Sync Start Screen with Global Best
+            if (count === 0) {
+                startHighScoreEl.innerText = `${data.score}`;
+            }
+
             // Track the lowest score in the top 10
             if (count === querySnapshot.size - 1) {
                 lowestTop10Score = data.score;
