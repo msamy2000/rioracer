@@ -118,6 +118,13 @@ heroImg.src = 'graphics/hero.jpg';
 const heroStartImg = new Image();
 heroStartImg.src = 'graphics/hero_start.png';
 
+// v1.7 Assets
+const heroSuperImg = new Image();
+heroSuperImg.src = 'graphics/hero 3.png'; // Super Hero
+
+const goldenBoneImg = new Image();
+goldenBoneImg.src = 'graphics/golden_bone.png'; // Power-up
+
 const catImg = new Image();
 catImg.src = 'graphics/obst_Cat.jpg';
 
@@ -288,6 +295,134 @@ class AudioController {
             oscillator.stop(startTime + 0.1);
         });
     }
+
+    // --- v1.7 Audio Upgrades ---
+
+    playGoldenBone() {
+        if (!this.enabled || !this.ctx) return;
+        const oscillator = this.ctx.createOscillator();
+        const gainNode = this.ctx.createGain();
+
+        // Magical Ascending Tone (Triangle Wave)
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(400, this.ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.3);
+
+        gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.ctx.destination);
+
+        oscillator.start();
+        oscillator.stop(this.ctx.currentTime + 0.3);
+    }
+
+    playSuperSmash() {
+        if (!this.enabled || !this.ctx) return;
+
+        // 1. Crunchy Impact (Sawtooth Drop)
+        const osc = this.ctx.createOscillator();
+        const oscGain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.2);
+
+        oscGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        oscGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+
+        osc.connect(oscGain);
+        oscGain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+
+        // 2. Noise Burst (White Noise)
+        const bufferSize = this.ctx.sampleRate * 0.2; // 0.2 seconds
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        noiseGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+
+        noise.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+        noise.start();
+    }
+
+    playClutch() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Fast "Ding"
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1500, this.ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playPowerUpWarning() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Urgent Beep
+        osc.type = 'square';
+        osc.frequency.value = 880;
+
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playTransition() {
+        if (!this.enabled || !this.ctx) return;
+
+        // Cinematic "Whoosh" (Noise + Lowpass Filter)
+        const duration = 1.0;
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(200, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + duration);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+    }
+
+}
 }
 const audio = new AudioController();
 
@@ -349,6 +484,10 @@ class Player {
 
         this.jumpCount = 0; // Track jumps
         this.maxJumps = 2;
+
+        // v1.7 Super Hero State
+        this.isSuper = false;
+        this.superTimer = 0;
     }
 
     resize() {
@@ -360,6 +499,26 @@ class Player {
     }
 
     update(input) {
+        // Super Hero Timer
+        if (this.isSuper) {
+            this.superTimer--;
+            if (this.superTimer <= 0) {
+                this.isSuper = false;
+                this.image = heroImg; // Revert to strong dog (or start dog)
+                audio.playPowerUpWarning(); // Play end sound? Actually defined 'playPowerUpWarning' for last 2s
+            }
+
+            // Warning Beep last 120 frames (2s)
+            if (this.superTimer > 0 && this.superTimer < 120 && this.superTimer % 15 === 0) {
+                audio.playPowerUpWarning();
+            }
+
+            // Trail Effect
+            if (frameCount % 5 === 0) {
+                particles.createTrail(this.x, this.y + this.height / 2);
+            }
+        }
+
         // Jumping
         if (input.jumpPressed) {
             if (this.grounded) {
@@ -370,8 +529,8 @@ class Player {
                 audio.playJump();
                 input.jumpPressed = false; // Prevent holding
             } else if (this.jumpCount < this.maxJumps) {
-                // Double Jump - Higher force for "double distance" feel
-                this.vy = JUMP_FORCE * 1.3; // 1.3x force provides significant airtime boost
+                // Double Jump
+                this.vy = JUMP_FORCE * 1.3;
                 this.jumpCount++;
                 audio.playDoubleJump();
                 input.jumpPressed = false;
@@ -393,6 +552,17 @@ class Player {
             this.grounded = true;
             this.jumpCount = 0; // Reset jumps
         }
+    }
+
+    transform() {
+        this.isSuper = true;
+        this.superTimer = 600; // 10 seconds at 60fps
+        this.image = heroSuperImg;
+        audio.playGoldenBone(); // Transformation sound
+
+        // Burst Effect
+        particles.createExplosion(this.x + this.width / 2, this.y + this.height / 2, 'gold');
+        vfx.triggerShake(10, 20); // Big impact
     }
 
     draw() {
@@ -448,6 +618,40 @@ class Background {
         } else {
             ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+    }
+}
+
+// --- Golden Bone Class ---
+class GoldenBone {
+    constructor() {
+        this.width = 50;
+        this.height = 30;
+        this.x = CANVAS_WIDTH;
+        this.y = CANVAS_HEIGHT - GROUND_HEIGHT - 150; // Higher up, requires jump
+        this.markedForDeletion = false;
+
+        // Sine wave movement (Floating)
+        this.yOrigin = this.y;
+        this.floatOffset = Math.random() * Math.PI * 2;
+    }
+
+    update() {
+        let currentRealSpeed = (CANVAS_WIDTH * 0.005) * (gameSpeed / 5);
+        this.x -= currentRealSpeed;
+
+        // Floating effect
+        this.y = this.yOrigin + Math.sin((frameCount * 0.1) + this.floatOffset) * 20;
+
+        if (this.x < -this.width) this.markedForDeletion = true;
+    }
+
+    draw() {
+        if (goldenBoneImg.complete) {
+            ctx.drawImage(goldenBoneImg, this.x, this.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = 'gold';
+            ctx.fillRect(this.x, this.y, this.width, this.height);
         }
     }
 }
@@ -510,11 +714,144 @@ class Obstacle {
     }
 }
 
+// --- v1.7 Visual FX System ---
+
+class ParticleSystem {
+    constructor() {
+        this.particles = [];
+    }
+
+    createExplosion(x, y, color) {
+        // Confetti Burst
+        for (let i = 0; i < 60; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 1.5) * 15,
+                life: 1.0, // 1 second
+                color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 8 + 4,
+                gravity: 0.5
+            });
+        }
+    }
+
+    createTrail(x, y) {
+        // Super-Hero Trail
+        this.particles.push({
+            x: x,
+            y: y,
+            vx: -5, // Move left with world (approx)
+            vy: (Math.random() - 0.5) * 2,
+            life: 0.5,
+            color: 'rgba(255, 215, 0, 0.8)', // Gold
+            size: Math.random() * 5 + 2,
+            gravity: 0,
+            isTrail: true
+        });
+    }
+
+    createFloatingText(x, y, text, color) {
+        this.particles.push({
+            x: x,
+            y: y,
+            vx: 0,
+            vy: -2, // Float up
+            life: 2.0, // 2 seconds
+            color: color || '#FFF',
+            text: text,
+            size: 30, // Font size
+            gravity: 0,
+            isText: true
+        });
+    }
+
+    update() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.life -= p.isText ? 0.01 : 0.02; // Text lasts longer
+
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+
+    draw(ctx) {
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+
+            if (p.isText) {
+                ctx.font = `bold ${p.size}px Arial`;
+                ctx.fillText(p.text, p.x, p.y);
+            } else {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+        });
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class VisualFX {
+    constructor() {
+        this.shakeTimer = 0;
+        this.shakeMagnitude = 0;
+    }
+
+    triggerShake(magnitude, durationFrames) {
+        this.shakeMagnitude = magnitude;
+        this.shakeTimer = durationFrames;
+    }
+
+    apply(ctx) {
+        if (this.shakeTimer > 0) {
+            const dx = (Math.random() - 0.5) * this.shakeMagnitude;
+            const dy = (Math.random() - 0.5) * this.shakeMagnitude;
+            ctx.translate(dx, dy);
+            this.shakeTimer--;
+        }
+    }
+
+    reset(ctx) {
+        // Reset transform is handled by clearRect/restore usually, 
+        // but here we just need to ensure we don't accumulate offsets if using save/restore
+        // In our main loop we clearRect, so translation persists? 
+        // Actually animate() doesn't use save/restore on ctx globally.
+        // We should reset translation manually if we moved it.
+        if (this.shakeTimer > 0 || this.shakeMagnitude > 0) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Identity matrix
+        }
+    }
+
+    drawSpeedLines(ctx) {
+        if (gameSpeed > 20) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 5; i++) {
+                const y = Math.random() * CANVAS_HEIGHT;
+                const len = Math.random() * 200 + 50;
+                ctx.beginPath();
+                ctx.moveTo(CANVAS_WIDTH, y);
+                ctx.lineTo(CANVAS_WIDTH - len, y);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
 // --- Game Logic ---
 const input = new InputHandler();
 const player = new Player();
 const background = new Background();
+const particles = new ParticleSystem();
+const vfx = new VisualFX();
 let obstacles = [];
+let powerups = []; // Golden Bone array
 
 let spawnTimer = 0;
 let nextSpawnDelay = 0; // Frames to wait
@@ -629,23 +966,79 @@ function handleObstacles(deltaTime) {
         }
     }
 
+    // --- Power-Up Spawning (Expert Mode) ---
+    if (isExpertMode && frameCount % 900 === 0) { // Every ~15 seconds
+        if (Math.random() < 0.7) { // 70% chance when timer hits
+            powerups.push(new GoldenBone());
+        }
+    }
+
+    // Update & Collision: Power-Ups
+    powerups.forEach(p => {
+        p.update();
+        p.draw(); // Draw here or main loop? update() here is fine for now
+
+        // Simple Collision
+        if (
+            player.x < p.x + p.width &&
+            player.x + player.width > p.x &&
+            player.y < p.y + p.height &&
+            player.y + player.height > p.y
+        ) {
+            // Collected!
+            p.markedForDeletion = true;
+            player.transform();
+        }
+    });
+    powerups = powerups.filter(p => !p.markedForDeletion);
+
+
     obstacles.forEach(obs => {
         obs.update();
         obs.draw();
 
-        // Collision Detection
-        // Use a smaller hitbox (padding) to be more forgiving
-        const paddingX = obs.width * 0.3; // Increased padding to 30% for even fairer play
-        const paddingY = obs.height * 0.3;
+        // 1. Check "Broad Phase" (Zero Padding) - Are we close?
+        const broadCollision =
+            player.x < obs.x + obs.width &&
+            player.x + player.width > obs.x &&
+            player.y < obs.y + obs.height &&
+            player.y + player.height > obs.y;
 
-        if (
-            player.x + paddingX < obs.x + obs.width - paddingX &&
-            player.x + player.width - paddingX > obs.x + paddingX &&
-            player.y + paddingY < obs.y + obs.height - paddingY &&
-            player.y + player.height - paddingY > obs.y + paddingY
-        ) {
-            // Collision!
-            gameOver();
+        if (broadCollision) {
+            // We are definitely interacting with the obstacle's volume
+
+            // 2. Check "Narrow Phase" (Safe Padding) - Did we actually hit?
+            const paddingX = obs.width * 0.3;
+            const paddingY = obs.height * 0.3;
+
+            const realCollision =
+                player.x + paddingX < obs.x + obs.width - paddingX &&
+                player.x + player.width - paddingX > obs.x + paddingX &&
+                player.y + paddingY < obs.y + obs.height - paddingY &&
+                player.y + player.height - paddingY > obs.y + paddingY;
+
+            if (realCollision) {
+                // HIT!
+                if (player.isSuper) {
+                    // Super Smash!
+                    audio.playSuperSmash();
+                    particles.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 'orange');
+                    vfx.triggerShake(5, 10);
+                    obs.markedForDeletion = true; // Destroy it
+                } else {
+                    // Dead
+                    gameOver();
+                }
+            } else {
+                // NEAR MISS! We hit the broad box but missed the narrow box.
+                // Limit frequency: only trigger if we haven't marked this specific obs as "missed" yet
+                if (!obs.nearMissTriggered) {
+                    audio.playClutch();
+                    particles.createFloatingText(player.x, player.y - 20, "CLUTCH! +100", "#00FF00");
+                    score += 100; // Bonus points
+                    obs.nearMissTriggered = true;
+                }
+            }
         }
     });
 
@@ -678,6 +1071,11 @@ function updateDifficulty() {
         setTimeout(() => {
             document.body.classList.remove('flash-animation');
         }, 500);
+
+        // v1.7 Confetti & Shockwave
+        particles.createExplosion(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 'cyan'); // Center burst
+        particles.createExplosion(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 'gold');  // Double burst
+        vfx.triggerShake(15, 30); // Major impact shake
     }
 
     // Time-based Speed Increase (Every 10s approx)
@@ -701,6 +1099,10 @@ function animate() {
     // Clear
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+    // Apply Screen Shake
+    ctx.save(); // Save BEFORE shake
+    vfx.apply(ctx);
+
     // Resize fix
     if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
         CANVAS_WIDTH = window.innerWidth;
@@ -717,10 +1119,25 @@ function animate() {
         background.update();
         player.update(input);
         updateDifficulty();
+
+        particles.update(); // Update particles
+
         frameCount++;
 
         // Draw Background
         background.draw();
+
+        // Sky Color Shift (Expert Mode)
+        if (frameCount > 6000) { // Expert Mode
+            // Only draw if we want to tint the sky or add an overlay?
+            // Actually, simplest 'Atmospheric Shift' is a colored overlay with 'multiply' blend mode
+            ctx.save();
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = '#663399'; // Deep Purple
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.restore();
+        }
 
         // Draw Ground
         ctx.fillStyle = '#555';
@@ -738,8 +1155,12 @@ function animate() {
         // Draw Player
         player.draw();
 
-        // Handle Obstacles
+        // Handle Obstacles & Powerups
         handleObstacles();
+
+        // Draw Particles & FX
+        particles.draw(ctx);
+        vfx.drawSpeedLines(ctx);
 
         // UI
         displayScore();
@@ -749,7 +1170,11 @@ function animate() {
         ctx.fillStyle = '#555';
         ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
         player.draw();
+        // Also draw particles if game over happened during explosion
+        particles.draw(ctx);
     }
+
+    ctx.restore(); // Restore transform (shake)
 
     // SINGLE requestAnimationFrame call for the entire function
     requestAnimationFrame(animate);

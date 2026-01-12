@@ -192,13 +192,36 @@ RioRacer/
 2. Open Chrome: `chrome://extensions/`
 3. Drag `.crx` file onto the page
 4. Click extension icon to play
+---
 
-#### Developer Install
-1. Clone repo: `git clone https://github.com/msamy2000/rioracer.git`
-2. Chrome → `chrome://extensions/`
-3. Enable **Developer mode**
-4. **Load unpacked** → Select `extension` folder
-5. Click extension icon in toolbar → Game launches in new tab
+## 🛠️ How to Run Locally
+
+Because this game uses JavaScript Modules (ES6), you cannot simply open `index.html` in your browser due to CORS security policies.
+
+### The Problem
+If you see this error:
+> `Access to script at '...' from origin 'null' has been blocked by CORS policy`
+
+### The Solution
+
+**Option 1: Double-Click Script (Easiest)**
+1.  Double-click **`start-game.bat`**.
+2.  It will automatically find Python or Node.js on your computer and start a local server.
+3.  The game will open in your browser automatically.
+4.  If it fails, the window will stay open so you can see why.
+
+**Option 2: PowerShell Script**
+If you prefer PowerShell, you can right-click `start-game.ps1` and choose "Run with PowerShell". If it closes immediately, try Option 1.
+If you prefer the command line:
+```bash
+# Using Python 3
+python -m http.server
+
+# Using Node.js
+npx http-server .
+```
+Then open `http://localhost:8000` or `http://localhost:8080`.
+ in new tab
 
 #### Build Extension Yourself
 ```powershell
