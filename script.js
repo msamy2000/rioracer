@@ -3,12 +3,10 @@
  * Endless Runner Game
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-import {
-    getFirestore, doc, getDoc, setDoc, updateDoc,
-    collection, addDoc, query, orderBy, limit, getDocs
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+// --- Firebase Globals (Dynamic Loading) ---
+let app, analytics, db;
+let initializeApp, getAnalytics, getFirestore, collection, addDoc, getDocs, query, orderBy, limit;
+let firebaseLoaded = false;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDWyv1VmQcOD7bwhAfleqQenAHSWsfiN3U",
@@ -20,10 +18,44 @@ const firebaseConfig = {
     measurementId: "G-61KD8CPRTN"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
+async function initFirebase() {
+    try {
+        console.log("Attempting to load Firebase v10.12.2...");
+        // Dynamic Imports for Offline Resilience - Using Stable v10.12.2
+        const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const firebaseFirestore = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        const firebaseAnalytics = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js");
+
+        // Assign to globals
+        initializeApp = firebaseApp.initializeApp;
+        getAnalytics = firebaseAnalytics.getAnalytics;
+        getFirestore = firebaseFirestore.getFirestore;
+        collection = firebaseFirestore.collection;
+        addDoc = firebaseFirestore.addDoc;
+        getDocs = firebaseFirestore.getDocs;
+        query = firebaseFirestore.query;
+        orderBy = firebaseFirestore.orderBy;
+        limit = firebaseFirestore.limit;
+
+        // Initialize
+        app = initializeApp(firebaseConfig);
+        analytics = getAnalytics(app);
+        db = getFirestore(app);
+
+        firebaseLoaded = true;
+        console.log("Firebase initialized successfully.");
+
+        // Initial Fetch
+        fetchLeaderboard();
+
+    } catch (e) {
+        console.warn("Firebase failed to load. Running in Offline Mode.", e);
+        const lbList = document.getElementById('leaderboard-list');
+        if (lbList) lbList.innerHTML = "<li>Offline Mode (Scores disabled)</li>";
+    }
+}
+// Start init but DO NOT AWAIT it blocks the rest of the script
+initFirebase();
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -423,7 +455,7 @@ class AudioController {
     }
 
 }
-}
+
 const audio = new AudioController();
 
 // --- Input Handling ---
@@ -1181,13 +1213,18 @@ function animate() {
 }
 
 // --- Leaderboard Logic ---
-const scoresCollectionRef = collection(db, "scores");
+// --- Leaderboard Logic ---
+// Dynamic ref
+let scoresCollectionRef = null;
 
 let lowestTop10Score = 0;
 
 async function fetchLeaderboard() {
+    if (!firebaseLoaded || !db) return; // Silent fail if offline or loading
+
     try {
-        const q = query(scoresCollectionRef, orderBy("score", "desc"), limit(10));
+        const scoresRef = collection(db, "scores");
+        const q = query(scoresRef, orderBy("score", "desc"), limit(10));
         const querySnapshot = await getDocs(q);
 
         leaderboardList.innerHTML = ""; // Clear existing
@@ -1230,11 +1267,17 @@ async function submitScore() {
 
     if (newScore <= 0) return;
 
+    if (!firebaseLoaded || !db) {
+        alert("Cannot save score: Offline Mode");
+        return;
+    }
+
     try {
         submitScoreBtn.disabled = true;
         submitScoreBtn.innerText = "SAVING...";
 
-        await addDoc(scoresCollectionRef, {
+        const scoresRef = collection(db, "scores");
+        await addDoc(scoresRef, {
             name: name,
             score: newScore,
             timestamp: new Date()
@@ -1263,7 +1306,8 @@ playerNameInput.addEventListener('keydown', (e) => {
 });
 
 // Initialize
-fetchLeaderboard();
+// Initialize called in initFirebase
+// fetchLeaderboard();
 
 function startGame() {
     audio.init();

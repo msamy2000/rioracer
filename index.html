@@ -35,7 +35,7 @@
                 <p class="subtitle">Dog vs. Street</p>
                 <p class="start-highscore">High Score: <span id="start-highscore-value">0</span></p>
                 <button id="start-btn" class="primary-btn">PLAY!</button>
-                <div class="version-tag">v1.7.0</div>
+                <div class="version-tag">v1.7.1</div>
             </div>
         </div>
 
@@ -74,6 +74,31 @@
         </div>
     </div>
 
+    <!-- Debugging Error Handler -->
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var string = msg.toLowerCase();
+            var substring = "script error";
+            if (string.indexOf(substring) > -1) {
+                alert('Script Error: See Console for details.');
+            } else {
+                var message = [
+                    'Message: ' + msg,
+                    'URL: ' + url,
+                    'Line: ' + lineNo,
+                    'Column: ' + columnNo,
+                    'Error object: ' + JSON.stringify(error)
+                ].join(' - ');
+                alert(message);
+            }
+            return false;
+        };
+        // Check if module loads
+        window.addEventListener('load', () => {
+            // If Play button has no listeners, game won't start.
+            console.log("Window Loaded");
+        });
+    </script>
     <script type="module" src="script.js"></script>
 </body>
 
