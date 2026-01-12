@@ -538,9 +538,14 @@ function handleObstacles(deltaTime) {
     // Safety buffer (user can't frame-perfect jump every time)
     let minSafeGap = jumpDistance * 1.5;
 
-    // DIFFICULTY ESCALATION: After 1 minute (3600 frames at 60fps), spawn obstacle patterns
-    const oneMinute = 3600;
-    const isHardMode = frameCount > oneMinute;
+    // DIFFICULTY ESCALATION: 
+    // "Hard Mode": After 45 seconds (2700 frames) -> Multi-obstacles
+    // "Expert Mode": After 1m 30s (5400 frames) -> "Gap Trap" patterns & Extreme Speed
+    const hardModeTime = 2700;
+    const expertModeTime = 5400;
+
+    const isHardMode = frameCount > hardModeTime;
+    const isExpertMode = frameCount > expertModeTime;
 
     // Spawning Strategy: Random timer + Distance Check
     spawnTimer++;
@@ -562,8 +567,32 @@ function handleObstacles(deltaTime) {
         }
 
         if (safeToSpawn) {
-            // HARD MODE: Spawn multiple consecutive obstacles
-            if (isHardMode && Math.random() < 0.4) { // 40% chance of multi-obstacle
+            // EXPERT MODE: "Gap Trap" Pattern (The "Timmy Special")
+            // Double Jump -> Land in tiny space -> Single Jump
+            // This is designed to break rhythm and cause failure.
+            if (isExpertMode && Math.random() < 0.6) { // 60% chance in expert mode
+                // Pattern: [Block] ...gap... [Block]
+                // Gap is specifically sized to allow LANDING but require immediate reaction
+
+                // First obstacle
+                obstacles.push(new Obstacle(0));
+
+                // Second obstacle: Positioned to force: Jump -> Land -> Jump
+                // A full jump distance is 'jumpDistance'. 
+                // We want them to land, so gap must be > jumpDistance.
+                // But we want it TIGHT, so gap should be jumpDistance + tiny buffer.
+                const landingSpot = jumpDistance * 1.2;
+                obstacles.push(new Obstacle(landingSpot));
+
+                // Optional 3rd element for pure chaos
+                if (Math.random() < 0.5) {
+                    const secondLanding = landingSpot + (jumpDistance * 1.2);
+                    obstacles.push(new Obstacle(secondLanding));
+                }
+
+            }
+            // HARD MODE: Spawn multiple consecutive obstacles (Double Jump Check)
+            else if (isHardMode && Math.random() < 0.5) {
                 // Spawn 2-3 obstacles in quick succession
                 const count = Math.random() < 0.5 ? 2 : 3;
 
