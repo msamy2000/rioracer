@@ -907,11 +907,11 @@ function handleObstacles(deltaTime) {
     // Safety buffer (user can't frame-perfect jump every time)
     let minSafeGap = jumpDistance * 1.5;
 
-    // DIFFICULTY ESCALATION (Balanced v1.6.1):
-    // "Hard Mode": After 50 seconds (3000 frames) -> Multi-obstacles
-    // "Expert Mode": After 1m 40s (6000 frames) -> "Gap Trap" patterns & Faster Speed
-    const hardModeTime = 3000;
-    const expertModeTime = 6000;
+    // DIFFICULTY ESCALATION (Updated v1.7.2):
+    // "Hard Mode": After 30 seconds (1800 frames) -> Multi-obstacles
+    // "Expert Mode": After 1m 30s (5400 frames) -> "Chaos Patterns" & Faster Speed
+    const hardModeTime = 1800;     // 30s
+    const expertModeTime = 5400;   // 90s
 
     const isHardMode = frameCount > hardModeTime;
     const isExpertMode = frameCount > expertModeTime;
@@ -999,6 +999,20 @@ function handleObstacles(deltaTime) {
     }
 
     // --- Power-Up Spawning (Expert Mode) ---
+    // --- Power-Up Spawning (Scripted & Random) ---
+
+    // 1. HARD MODE INTRO (Once Only) - @ ~42s (2500 frames)
+    if (frameCount === 2500) {
+        powerups.push(new GoldenBone());
+        // Force audio hint?
+    }
+
+    // 2. UNPREDICTABLE PHASE (Twice) - @ ~66s (4000 frames) & ~83s (5000 frames)
+    if (frameCount === 4000 || frameCount === 5000) {
+        powerups.push(new GoldenBone());
+    }
+
+    // 3. EXPERT MODE (Randomized) - After 90s
     if (isExpertMode && frameCount % 900 === 0) { // Every ~15 seconds
         if (Math.random() < 0.7) { // 70% chance when timer hits
             powerups.push(new GoldenBone());

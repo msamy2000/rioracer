@@ -58,9 +58,9 @@ In *Dog vs. Street*, you play as a scrappy street dog running through an endless
 | Time | Speed | Obstacles | Challenge Level |
 |------|-------|-----------|----------------|
 | 0:00 | 8 | Single | **Easy** - Learn controls |
-| 0:30 | 11 | Multi (Double-Jump) | **HARD MODE** (30s Start) |
-| 1:00 | 14 | Randomized Gaps | Pattern memorization impossible |
-| **1:30** | **17** | **CHAOS PATTERNS** | **EXPERT MODE** + 🦴 **GOLDEN BONE** |
+| 0:30 | 11 | Multi (Double-Jump) | **HARD MODE** + 1x 🦴 Golden Bone |
+| 1:00 | 14 | Randomized Gaps | **UNPREDICTABLE** + 2x 🦴 Golden Bones |
+| **1:30** | **17** | **CHAOS PATTERNS** | **EXPERT MODE** (Random 🦴 Spawns) |
 | 2:30 | 25 | High Speed | 1.5x Acceleration Rate |
 
 ### Expert Mode (The "Timmy Special")
@@ -68,7 +68,7 @@ In *Dog vs. Street*, you play as a scrappy street dog running through an endless
 At **1 minute 30 seconds**, the game evolves again with randomized **Chaos Patterns** AND **Power-Ups**.
 
 **🦴 The Golden Bone**:
-- Spawns rarely (every ~15s) during Expert Mode.
+- Spawns occasionally starting in **Hard Mode**.
 - **Effect**: transforms you into **Super Hero Dog** for 10 seconds.
 - **Super Power**: You become **INVINCIBLE** and destroy obstacles on impact ("Super Smash!").
 
