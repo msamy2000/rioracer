@@ -1,6 +1,6 @@
 # Dog vs. Street - Endless Runner Game
 
-![Version](https://img.shields.io/badge/version-1.6.0-blue)
+![Version](https://img.shields.io/badge/version-1.6.1-blue)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Chrome%20Extension-green)
 
 **Play Now**: [https://msamy2000.github.io/rioracer/](https://msamy2000.github.io/rioracer/)

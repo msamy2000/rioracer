@@ -21,7 +21,7 @@ Copy-Item graphics/game_cover.png extension/icons/icon48.png -Force
 Copy-Item graphics/game_cover.png extension/icons/icon128.png -Force
 
 # Create zip file for Chrome Web Store
-$version = "1.6.0"
+$version = "1.6.1"
 $zipFile = "rioracer-extension-v$version.zip"
 
 Write-Host "Creating distribution package..." -ForegroundColor Yellow

@@ -538,11 +538,11 @@ function handleObstacles(deltaTime) {
     // Safety buffer (user can't frame-perfect jump every time)
     let minSafeGap = jumpDistance * 1.5;
 
-    // DIFFICULTY ESCALATION: 
-    // "Hard Mode": After 45 seconds (2700 frames) -> Multi-obstacles
-    // "Expert Mode": After 1m 30s (5400 frames) -> "Gap Trap" patterns & Extreme Speed
-    const hardModeTime = 2700;
-    const expertModeTime = 5400;
+    // DIFFICULTY ESCALATION (Balanced v1.6.1):
+    // "Hard Mode": After 50 seconds (3000 frames) -> Multi-obstacles
+    // "Expert Mode": After 1m 40s (6000 frames) -> "Gap Trap" patterns & Faster Speed
+    const hardModeTime = 3000;
+    const expertModeTime = 6000;
 
     const isHardMode = frameCount > hardModeTime;
     const isExpertMode = frameCount > expertModeTime;
@@ -567,10 +567,9 @@ function handleObstacles(deltaTime) {
         }
 
         if (safeToSpawn) {
-            // EXPERT MODE: "Gap Trap" Pattern (The "Timmy Special")
-            // Double Jump -> Land in tiny space -> Single Jump
-            // This is designed to break rhythm and cause failure.
-            if (isExpertMode && Math.random() < 0.6) { // 60% chance in expert mode
+            // EXPERT MODE: "Gap Trap" Pattern
+            // Probability reduced to 40% (was 60%) to be less punishing
+            if (isExpertMode && Math.random() < 0.4) {
                 // Pattern: [Block] ...gap... [Block]
                 // Gap is specifically sized to allow LANDING but require immediate reaction
 
@@ -675,9 +674,9 @@ function updateDifficulty() {
 
     // Time-based Speed Increase (Every 10s approx)
     // 60fps * 10s = 600 frames
-    // In Expert Mode (>90s), speed increases TWICE as fast (every 5s)
+    // In Expert Mode (>100s), speed increases faster (every 7s)
     let speedInterval = 600;
-    if (frameCount > 5400) speedInterval = 300;
+    if (frameCount > 6000) speedInterval = 420;
 
     if (frameCount % speedInterval === 0 && frameCount > 0) {
         gameSpeed += 1; // Progressive difficulty - no cap!
