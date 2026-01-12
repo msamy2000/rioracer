@@ -1,6 +1,6 @@
 # Dog vs. Street - Endless Runner Game
 
-![Version](https://img.shields.io/badge/version-1.5.0-blue)
+![Version](https://img.shields.io/badge/version-1.6.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Chrome%20Extension-green)
 
 **Play Now**: [https://msamy2000.github.io/rioracer/](https://msamy2000.github.io/rioracer/)
@@ -55,23 +55,23 @@ In *Dog vs. Street*, you play as a scrappy street dog running through an endless
 | Time | Speed | Obstacles | Challenge Level |
 |------|-------|-----------|----------------|
 | 0:00 | 8 | Single | **Easy** - Learn controls |
-| 0:10 | 9 | Single | Warming up |
-| 0:30 | 11 | Single | Getting faster |
-| **1:00** | **14** | **2-3 consecutive** | **HARD MODE ACTIVATED** |
-| 1:30 | 17 | Patterns (40% chance) | Expert reflexes required |
-| 2:00 | 20 | Frequent patterns | Intense concentration |
-| 3:00 | 26 | Dense spawning | Brutal difficulty |
-| 5:00+ | 38+ | Relentless | Near-impossible |
+| 0:45 | 13 | Multi (Double-Jump) | **HARD MODE** (Faster start) |
+| 1:00 | 14 | Randomized Gaps | Pattern memorization impossible |
+| **1:30** | **17** | **GAP TRAPS** | **EXPERT MODE ACTIVATED** |
+| 2:00 | 25 | Extreme Speed | 2x Acceleration Rate |
+| 5:00+ | 50+ | Chaos | Near-impossible |
 
-### Hard Mode (After 1 Minute)
+### Expert Mode (The "Timmy Special")
 
-Once you survive 60 seconds, the game transforms:
+At **1 minute 30 seconds**, the game evolves again:
 
-1. **Multi-Obstacle Spawns**: 40% chance of 2-3 obstacles appearing in quick succession
-2. **Tight Spacing**: Gaps between consecutive obstacles = 60% of single jump distance
-3. **Double-Jump Required**: Single jumps won't clear multi-patterns
-4. **Faster Spawning**: Obstacles appear every 40-80 frames (down from 60-120)
-5. **No Speed Cap**: Speed continues increasing indefinitely
+1. **Gap Traps**: A devious pattern of [Block] ... [Land] ... [Block]. You MUST land in the small gap between obstacles. Double-jumping over both is impossible.
+2. **2x Acceleration**: Speed increases every 5 seconds instead of 10.
+3. **Chaos Spawning**: Obstacles appear with highly unpredictable timing.
+
+### Hard Mode (Adjusted)
+
+Now starts at **45 seconds** (was 60s) to ramp up excitement earlier. Features randomized spacing between consecutive obstacles.
 
 ### Obstacle Types
 
@@ -280,15 +280,13 @@ See [EXTENSION-README.md](EXTENSION-README.md) and [TESTING-GUIDE.md](TESTING-GU
 
 ### Version History
 
-- **v1.5.0** (Current)
-  - Starting speed increased to 8 (was 5)
-  - Removed speed cap (infinite difficulty scaling)
-  - Multi-obstacle patterns after 1 minute (2-3 consecutive)
-  - Double-jump required for hard mode survival
-  - Faster spawning in hard mode (40-80 frames)
-  - Comprehensive gameplay documentation
+- **v1.6.0** (Current)
+  - **Expert Mode** (1m 30s): "Gap Trap" patterns designed to break double-jump spam
+  - **Hard Mode** (45s): Starts earlier with randomized spacing
+  - **Extreme Speed**: Acceleration doubles after 90 seconds
+  - Based on user feedback for "Tricky" gameplay
 
-- **v1.4.5**
+- **v1.5.0**
   - Multi-obstacle patterns after 1 minute
   - Starting speed increased to 8
   - Removed speed cap (infinite difficulty)

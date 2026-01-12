@@ -611,12 +611,13 @@ function handleObstacles(deltaTime) {
             }
 
             spawnTimer = 0;
-            // Next delay: Randomize to create rhythm, but ensure it's not too long either.
-            // In hard mode, spawn more frequently
-            if (isHardMode) {
-                nextSpawnDelay = 40 + Math.random() * 40; // Faster spawning
+            // Delay Logic
+            if (isExpertMode) {
+                nextSpawnDelay = 30 + Math.random() * 30; // Extreme pace
+            } else if (isHardMode) {
+                nextSpawnDelay = 40 + Math.random() * 40; // Fast pace
             } else {
-                nextSpawnDelay = 60 + Math.random() * 60;
+                nextSpawnDelay = 60 + Math.random() * 60; // Normal pace
             }
         }
     }
