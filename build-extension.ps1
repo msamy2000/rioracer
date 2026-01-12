@@ -38,4 +38,4 @@ Write-Host "`n✅ Extension packaged successfully!" -ForegroundColor Green
 Write-Host "📦 Package: $zipFile" -ForegroundColor Green
 Write-Host "`nNext steps:" -ForegroundColor Cyan
 Write-Host "1. Load unpacked extension from 'extension' folder to test locally" -ForegroundColor White
-Write-Host "2. Upload $zipFile to Chrome Web Store Developer Dashboard" -ForegroundColor White
+Write-Host "2. Upload to Chrome Web Store Developer Dashboard: $zipFile" -ForegroundColor White
