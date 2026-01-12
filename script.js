@@ -620,13 +620,10 @@ function updateDifficulty() {
     // Time-based Speed Increase (Every 10s approx)
     // 60fps * 10s = 600 frames
     if (frameCount % 600 === 0 && frameCount > 0) {
-        gameSpeed += 1; // Aggressive increase
+        gameSpeed += 1; // Progressive difficulty - no cap!
     }
 
-    // Still keep score-based increase or replace?
-    // User asked for "Every 40 seconds", implies time-based is primary.
-    // Let's cap max speed
-    if (gameSpeed > 25) gameSpeed = 25;
+    // No speed cap - game becomes progressively harder indefinitely
 }
 
 let isAnimating = false;
@@ -786,7 +783,7 @@ function startGame() {
     // Ensure HUD shows current high score
     highScoreEl.innerText = Math.floor(highScore);
 
-    gameSpeed = 5;
+    gameSpeed = 8;
     score = 0;
     highScoreBroken = false;
     highScoreAlertShown = false;
