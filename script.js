@@ -567,11 +567,14 @@ function handleObstacles(deltaTime) {
                 // Spawn 2-3 obstacles in quick succession
                 const count = Math.random() < 0.5 ? 2 : 3;
 
+                let currentOffset = 0;
                 for (let i = 0; i < count; i++) {
-                    // Each obstacle offset by just enough to require precise double-jumping
-                    // Gap = slightly less than single jump distance to force double jump usage
-                    const tightGap = jumpDistance * 0.6; // Tight spacing
-                    obstacles.push(new Obstacle(i * tightGap));
+                    obstacles.push(new Obstacle(currentOffset));
+
+                    // Randomize the gap for the NEXT one
+                    // Range: 0.5 to 0.8 of jump distance (Varied spacing: Tight to Moderate)
+                    const randomGap = jumpDistance * (0.5 + Math.random() * 0.3);
+                    currentOffset += randomGap;
                 }
             } else {
                 // Normal single obstacle
