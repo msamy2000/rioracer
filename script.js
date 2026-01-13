@@ -483,9 +483,20 @@ class InputHandler {
         });
 
         window.addEventListener('touchstart', (e) => {
+            // Ignore touches on button/input to allow typing/clicking
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+                return;
+            }
+
             this.jumpPressed = true;
             if (currentState === GameState.MENU) startGame();
-            if (currentState === GameState.GAMEOVER) resetGame(); // Simple tap to restart
+
+            if (currentState === GameState.GAMEOVER) {
+                // Only reset if new record section is HIDDEN
+                if (newRecordSection.classList.contains('hidden')) {
+                    resetGame();
+                }
+            }
         });
 
         window.addEventListener('touchend', () => {
@@ -493,7 +504,9 @@ class InputHandler {
         });
 
         // Mouse click for desktop testing without keyboard
-        window.addEventListener('mousedown', () => {
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+
             this.jumpPressed = true;
             if (currentState === GameState.MENU) startGame();
         });
