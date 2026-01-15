@@ -1,0 +1,22 @@
+{
+    "name": "RioRacer: Dog vs. Street",
+    "short_name": "RioRacer",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#333333",
+    "theme_color": "#FF4757",
+    "description": "Help Rio survive the chaotic streets! An intense endless runner game.",
+    "orientation": "landscape",
+    "icons": [
+        {
+            "src": "graphics/icon_small.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "graphics/icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

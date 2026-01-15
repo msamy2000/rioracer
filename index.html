@@ -29,6 +29,7 @@
     <meta property="twitter:image" content="https://rioracer.com/graphics/game_cover.png">
 
     <link rel="icon" type="image/png" href="graphics/game_cover.png">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -121,6 +122,16 @@
     </div>
 
     <script type="module" src="script.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker registered!', reg))
+                    .catch((err) => console.log('Service Worker failed:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
