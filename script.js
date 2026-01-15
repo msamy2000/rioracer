@@ -693,19 +693,19 @@ class Background {
             let scaledWidth = bgImg.width * scale;
             this.width = scaledWidth;
 
+            // Rounding for background to prevent seam gaps or jitter
+            const drawX = Math.floor(this.x);
+            const drawW = Math.floor(this.width);
+
             // Calculate how many tiles we need to cover the screen
             // We need to cover CANVAS_WIDTH + the bit that scrolled off (Math.abs(this.x))
             // Since this.x is negative, we need ensures width * count > CANVAS_WIDTH - this.x
-            // Simply put: draw until we are off screen.
-
-            // Safety check for scale infinity
-            if (!isFinite(this.width) || this.width <= 0) this.width = CANVAS_WIDTH;
-
             let numTiles = Math.ceil(CANVAS_WIDTH / this.width) + 1;
 
             for (let i = 0; i < numTiles; i++) {
-                ctx.drawImage(bgImg, this.x + (i * this.width), 0, this.width, CANVAS_HEIGHT);
+                ctx.drawImage(bgImg, drawX + (i * drawW), 0, drawW, CANVAS_HEIGHT);
             }
+
         } else {
             ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -796,11 +796,17 @@ class Obstacle {
     }
 
     draw() {
+        // Round coordinates for sharper rendering and less browser interpolation jitter
+        const drawX = Math.floor(this.x);
+        const drawY = Math.floor(this.y);
+        const drawW = Math.floor(this.width);
+        const drawH = Math.floor(this.height);
+
         if (this.image.complete && this.image.naturalWidth > 0) {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            ctx.drawImage(this.image, drawX, drawY, drawW, drawH);
         } else {
             ctx.fillStyle = this.type === 'cat' ? 'orange' : 'brown';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.fillRect(drawX, drawY, drawW, drawH);
         }
     }
 }
@@ -1148,7 +1154,13 @@ function handleObstacles(timeScale) {
         }
     });
 
-    obstacles = obstacles.filter(obs => !obs.markedForDeletion);
+    // OPTIMIZATION: In-place removal to avoid GC churn
+    // obstacles = obstacles.filter(obs => !obs.markedForDeletion);
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        if (obstacles[i].markedForDeletion) {
+            obstacles.splice(i, 1);
+        }
+    }
 }
 
 function displayScore() {
@@ -1215,6 +1227,13 @@ function animate(currentTime) {
 
     // Safety Cap to prevent "Spiral of Death" on lag spikes (e.g. switching tabs)
     if (deltaTime > 100) deltaTime = 100;
+
+    // --- OPTIMIZATION: Delta Snapping (v1.8.5) ---
+    // Snap close-enough frames to perfect 60fps (16.66ms) to prevent micro-stutter
+    // Range: 15ms (~66fps) to 18ms (~55fps)
+    if (deltaTime > 15 && deltaTime < 18) {
+        deltaTime = REFERENCE_FRAME_MS;
+    }
 
     // Calculate Scale Factor (1.0 = 60fps, 0.5 = 120fps)
     const timeScale = deltaTime / REFERENCE_FRAME_MS;
