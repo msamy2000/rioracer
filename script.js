@@ -483,8 +483,8 @@ class InputHandler {
         });
 
         window.addEventListener('touchstart', (e) => {
-            // Ignore touches on button/input to allow typing/clicking
-            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+            // Ignore touches on button/input/link to allow interaction
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('a')) {
                 return;
             }
 
@@ -505,7 +505,7 @@ class InputHandler {
 
         // Mouse click for desktop testing without keyboard
         window.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('a')) return;
 
             this.jumpPressed = true;
             if (currentState === GameState.MENU) startGame();
