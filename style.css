@@ -472,6 +472,65 @@ canvas {
     align-items: center;
 }
 
+/* In-App Browser Warning */
+#inapp-warning {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    z-index: 10000;
+    /* Above everything */
+    color: white;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#inapp-warning .warning-content {
+    background: #2a2a2a;
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid #ff4757;
+    max-width: 90%;
+    width: 400px;
+}
+
+.browser-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+#inapp-warning h2 {
+    color: #ff4757;
+    margin-bottom: 10px;
+}
+
+#inapp-warning p {
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.ios-instruction {
+    background: #333;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+#close-warning-btn {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid #666;
+    color: #aaa;
+    font-size: 0.8rem;
+    padding: 8px 15px;
+}
+
 .warning-content {
     padding: 20px;
 }

@@ -134,6 +134,7 @@ const GameState = {
     GAMEOVER: 2
 };
 
+// Game State
 let currentState = GameState.MENU;
 let gameSpeed = 5;
 let score = 0;
@@ -142,6 +143,51 @@ let highScoreBroken = false; // Track if we broke it this run
 let highScoreAlertShown = false;
 let frameCount = 0;
 let timeSinceStart = 0; // Track time for speed increase
+
+// --- In-App Browser Detection (v1.8.3) ---
+function checkInAppBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    // Detect Instagram or Facebook (FBAN/FBAV)
+    const isInApp = (ua.indexOf("Instagram") > -1) || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
+
+    // Explicit override for testing: ?forceInApp=true
+    const urlParams = new URLSearchParams(window.location.search);
+    if (isInApp || urlParams.get('forceInApp') === 'true') {
+        const warningEl = document.getElementById('inapp-warning');
+        const androidBtn = document.getElementById('android-open-btn');
+        const iosInstr = document.querySelector('.ios-instruction');
+        const closeBtn = document.getElementById('close-warning-btn');
+        const isAndroid = /android/i.test(ua);
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+        if (warningEl) {
+            warningEl.classList.remove('hidden');
+
+            // Logic per platform
+            if (isAndroid) {
+                // Android Deep Link Logic
+                if (androidBtn) {
+                    androidBtn.classList.remove('hidden');
+                    androidBtn.onclick = () => {
+                        // Attempt to force open Chrome
+                        window.location.href = "googlechrome://rioracer.com";
+                        // Fallback logic could go here but is tricky in JS
+                    };
+                }
+            } else if (isIOS) {
+                // iOS Instructions
+                if (iosInstr) iosInstr.classList.remove('hidden');
+            }
+
+            // Dismiss button
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    warningEl.classList.add('hidden');
+                };
+            }
+        }
+    }
+}
 
 // Assets
 const heroImg = new Image();
@@ -1435,6 +1481,7 @@ restartBtn.addEventListener('click', resetGame);
 // Initial Draw & Setup
 // startHighScoreEl value is set by fetchLeaderboard
 calculateScale();
+checkInAppBrowser(); // Run Detection
 player.resize();
 background.draw();
 ctx.fillStyle = '#555';

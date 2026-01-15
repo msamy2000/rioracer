@@ -69,6 +69,21 @@
         </div>
     </div>
 
+    <!-- In-App Browser Warning (Facebook/Instagram) -->
+    <div id="inapp-warning" class="hidden">
+        <div class="warning-content">
+            <div class="browser-icon">🌐</div>
+            <h2>Better Experience Required</h2>
+            <p>This app (Instagram/Facebook) limits game performance.</p>
+            <p><strong>Please open in external browser:</strong></p>
+            <div class="ios-instruction hidden">
+                Tap <strong>...</strong> (Top Right) <br> Then <strong>Open in Browser</strong>
+            </div>
+            <button id="android-open-btn" class="primary-btn hidden">OPEN IN CHROME</button>
+            <button id="close-warning-btn" class="secondary-btn">I'll Risk It</button>
+        </div>
+    </div>
+
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
 
@@ -83,7 +98,7 @@
                 <p class="start-highscore">High Score: <span id="start-highscore-value">0</span></p>
                 <button id="start-btn" class="primary-btn">PLAY!</button>
             </div>
-            <div class="version-tag">v1.8.2</div>
+            <div class="version-tag">v1.8.3</div>
             <div class="contact-tag"><a href="mailto:hello@rioracer.com">hello@rioracer.com</a></div>
         </div>
 
