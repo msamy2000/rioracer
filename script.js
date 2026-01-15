@@ -152,7 +152,7 @@ heroStartImg.src = 'graphics/hero_start.png';
 
 // v1.7 Assets
 const heroSuperImg = new Image();
-heroSuperImg.src = 'graphics/hero 3.png'; // Super Hero
+heroSuperImg.src = 'graphics/hero_super.png'; // Super Hero
 
 const goldenBoneImg = new Image();
 goldenBoneImg.src = 'graphics/golden_bone.png'; // Power-up

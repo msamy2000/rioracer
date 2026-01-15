@@ -7,7 +7,7 @@ const ASSETS_TO_CACHE = [
     './manifest.json',
     './graphics/game_cover.png',
     './graphics/hero.jpg',
-    './graphics/hero 3.png',
+    './graphics/hero_super.png',
     './graphics/hero_start.png',
     './graphics/golden_bone.png',
     './graphics/obst_Cat.jpg',
