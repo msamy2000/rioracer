@@ -1519,7 +1519,7 @@ function resetGame() {
 }
 
 startBtn.addEventListener('click', startGame);
-re
+restartBtn.addEventListener('click', resetGame);
 // === Event Listeners ===
 // v1.9: About Modal & Share
 const aboutModal = document.getElementById('about-modal');
