@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rioracer-v1.9.9';
+const CACHE_NAME = 'rioracer-v1.9.10';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
