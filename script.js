@@ -57,7 +57,13 @@ async function initFirebase() {
     }
 }
 // Start init but DO NOT AWAIT it blocks the rest of the script
-initFirebase();
+// Defer Firebase to prioritize Main Thread for Rendering (LCP/FCP)
+if (window.requestIdleCallback) {
+    window.requestIdleCallback(() => initFirebase());
+} else {
+    // Fallback for older browsers
+    setTimeout(() => initFirebase(), 500);
+}
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
