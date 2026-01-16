@@ -13,6 +13,8 @@ $files = @(
     "script.js",
     "manifest.json",
     "sw.js",
+    "robots.txt",
+    "sitemap.xml",
     "graphics/*"
 )
 
