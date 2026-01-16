@@ -1519,8 +1519,100 @@ function resetGame() {
 }
 
 // Event Listeners for Buttons
+
+// === Event Listeners ===
+// v1.9: About Modal & Share
+const aboutModal = document.getElementById('about-modal');
+const infoBtn = document.getElementById('info-btn');
+const closeAboutBtn = document.getElementById('close-about-btn');
+const shareBtn = document.getElementById('share-btn');
+
+infoBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    aboutModal.classList.remove('hidden');
+});
+
+closeAboutBtn.addEventListener('click', () => {
+    aboutModal.classList.add('hidden');
+});
+
+// Close modal when clicking outside content
+aboutModal.addEventListener('click', (e) => {
+    if (e.target === aboutModal) {
+        aboutModal.classList.add('hidden');
+    }
+});
+
+// Web Share API
+shareBtn.addEventListener('click', async () => {
+    const shareData = {
+        title: 'RioRacer - Dog vs. Street',
+        text: `I just scored {Math.floor(score)} in RioRacer! Can you beat me?`,
+        url: 'https://rioracer.com'
+    };
+
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+            console.log('Shared successfully');
+        } else {
+            // Fallback: Copy to clipboard
+            const shareText = `{shareData.text} {shareData.url}`;
+            await navigator.clipboard.writeText(shareText);
+            alert('Score copied to clipboard! Paste it to share.');
+        }
+    } catch (err) {
+        console.log('Error sharing:', err);
+    }
+});
 startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', resetGame);
+re
+// === Event Listeners ===
+// v1.9: About Modal & Share
+const aboutModal = document.getElementById('about-modal');
+const infoBtn = document.getElementById('info-btn');
+const closeAboutBtn = document.getElementById('close-about-btn');
+const shareBtn = document.getElementById('share-btn');
+
+infoBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    aboutModal.classList.remove('hidden');
+});
+
+closeAboutBtn.addEventListener('click', () => {
+    aboutModal.classList.add('hidden');
+});
+
+// Close modal when clicking outside content
+aboutModal.addEventListener('click', (e) => {
+    if (e.target === aboutModal) {
+        aboutModal.classList.add('hidden');
+    }
+});
+
+// Web Share API
+shareBtn.addEventListener('click', async () => {
+    const shareData = {
+        title: 'RioRacer - Dog vs. Street',
+        text: `I just scored {Math.floor(score)} in RioRacer! Can you beat me?`,
+        url: 'https://rioracer.com'
+    };
+
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+            console.log('Shared successfully');
+        } else {
+            // Fallback: Copy to clipboard
+            const shareText = `{shareData.text} {shareData.url}`;
+            await navigator.clipboard.writeText(shareText);
+            alert('Score copied to clipboard! Paste it to share.');
+        }
+    } catch (err) {
+        console.log('Error sharing:', err);
+    }
+});
+startBtn.addEventListener('click', resetGame);
 
 // Removed Reset Local Score Button Logic
 
