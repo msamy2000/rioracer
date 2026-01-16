@@ -1545,21 +1545,39 @@ function startGame() {
 }
 
 
-// Check if score qualifies for Top 10
-// If we have less than 10 scores OR score > lowestTop10Score
-const currentScore = Math.floor(score);
-if (currentScore > 0 && currentScore >= lowestTop10Score) {
-    newRecordSection.classList.remove('hidden');
-    playerNameInput.value = localStorage.getItem('rioRacerPlayerName') || "";
-    submitScoreBtn.disabled = false;
-    submitScoreBtn.innerText = "SAVE";
-    audio.playHighScore(); // Play happy sound
-} else {
-    // Just refresh leaderboard to be sure
-    fetchLeaderboard();
-}
+function gameOver() {
+    currentState = GameState.GAMEOVER;
+    hud.classList.add('hidden');
+    gameOverScreen.classList.remove('hidden');
 
-startHighScoreEl.innerText = `${Math.floor(highScore)}`;
+    finalScoreEl.innerText = "Score: " + Math.floor(score);
+    audio.playCrash();
+
+    // v1.9.9: Apply pending updates now that run is over
+    if (typeof updateAvailable !== 'undefined' && updateAvailable) {
+        console.log("Game Over - Applying pending update...");
+        applyUpdate();
+        return;
+    }
+
+    // Hide input by default
+    newRecordSection.classList.add('hidden');
+
+    // Check if score qualifies for Top 10
+    // If we have less than 10 scores OR score > lowestTop10Score
+    const currentScore = Math.floor(score);
+    if (currentScore > 0 && currentScore >= lowestTop10Score) {
+        newRecordSection.classList.remove('hidden');
+        playerNameInput.value = localStorage.getItem('rioRacerPlayerName') || "";
+        submitScoreBtn.disabled = false;
+        submitScoreBtn.innerText = "SAVE";
+        audio.playHighScore(); // Play happy sound
+    } else {
+        // Just refresh leaderboard to be sure
+        fetchLeaderboard();
+    }
+
+    startHighScoreEl.innerText = `${Math.floor(highScore)}`;
 }
 
 function resetGame() {
