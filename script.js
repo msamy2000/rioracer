@@ -5,7 +5,7 @@
 
 // --- Firebase Globals (Dynamic Loading) ---
 let app, analytics, db;
-let initializeApp, getAnalytics, getFirestore, collection, addDoc, getDocs, query, orderBy, limit;
+let initializeApp, getAnalytics, getFirestore, collection, addDoc, updateDoc, getDocs, query, where, orderBy, limit;
 let firebaseLoaded = false;
 
 const firebaseConfig = {
@@ -32,8 +32,10 @@ async function initFirebase() {
         getFirestore = firebaseFirestore.getFirestore;
         collection = firebaseFirestore.collection;
         addDoc = firebaseFirestore.addDoc;
+        updateDoc = firebaseFirestore.updateDoc;
         getDocs = firebaseFirestore.getDocs;
         query = firebaseFirestore.query;
+        where = firebaseFirestore.where;
         orderBy = firebaseFirestore.orderBy;
         limit = firebaseFirestore.limit;
 
@@ -607,8 +609,8 @@ class Player {
                 audio.playPowerUpWarning();
             }
 
-            // Trail Effect
-            if (frameCount % 5 === 0) {
+            // Trail Effect (Time-based: Every ~80ms or 5 frames at 60fps)
+            if (gameTime % 5 < timeScale) {
                 particles.createTrail(this.x, this.y + this.height / 2);
             }
         }
@@ -1427,18 +1429,41 @@ async function submitScore() {
         submitScoreBtn.innerText = "SAVING...";
 
         const scoresRef = collection(db, "scores");
-        await addDoc(scoresRef, {
-            name: name,
-            score: newScore,
-            timestamp: new Date()
-        });
 
-        // Success
+        // Check for existing score with same name
+        const q = query(scoresRef, where("name", "==", name));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            // Existing user found
+            const existingDoc = querySnapshot.docs[0];
+            const existingData = existingDoc.data();
+
+            if (newScore > existingData.score) {
+                // New high score for this user! Update it.
+                await updateDoc(existingDoc.ref, {
+                    score: newScore,
+                    timestamp: new Date()
+                });
+                // Force local storage update
+                localStorage.setItem('rioRacerPlayerName', name);
+            } else {
+                // Not a personal best, do nothing but pretend success
+                console.log("Score submitted but lower than personal best. Ignoring.");
+            }
+        } else {
+            // New user, add new doc
+            await addDoc(scoresRef, {
+                name: name,
+                score: newScore,
+                timestamp: new Date()
+            });
+            localStorage.setItem('rioRacerPlayerName', name);
+        }
+
+        // Success (UI feedback)
         newRecordSection.classList.add('hidden'); // Hide input
         fetchLeaderboard(); // Refresh list
-
-        // Save to local storage too
-        localStorage.setItem('rioRacerPlayerName', name);
 
     } catch (e) {
         console.error("Error saving score:", e);
