@@ -143,6 +143,8 @@ let highScoreBroken = false; // Track if we broke it this run
 let highScoreAlertShown = false;
 let frameCount = 0;
 let gameTime = 0; // v1.8.6: "Simulated Frames" (Time-based accumulator)
+let spawnFlags = { s2500: false, s4000: false, s5000: false }; // Prevent duplicate spawns
+let lastExpertSpawnCheck = 0; // Track expert mode intervals
 let timeSinceStart = 0; // Track time for speed increase
 
 // --- In-App Browser Detection (v1.8.3) ---
@@ -1069,20 +1071,29 @@ function handleObstacles(timeScale) {
     // --- Power-Up Spawning (Scripted & Random) ---
 
     // 1. HARD MODE INTRO (Once Only) - @ ~42s (2500 frames)
-    if (gameTime >= 2500 && gameTime < 2502) {
+    if (gameTime >= 2500 && !spawnFlags.s2500) {
         powerups.push(new GoldenBone());
-        // Force audio hint?
+        spawnFlags.s2500 = true;
     }
 
     // 2. UNPREDICTABLE PHASE (Twice) - @ ~66s (4000 frames) & ~83s (5000 frames)
-    if ((gameTime >= 4000 && gameTime < 4002) || (gameTime >= 5000 && gameTime < 5002)) {
+    if (gameTime >= 4000 && !spawnFlags.s4000) {
         powerups.push(new GoldenBone());
+        spawnFlags.s4000 = true;
+    }
+    if (gameTime >= 5000 && !spawnFlags.s5000) {
+        powerups.push(new GoldenBone());
+        spawnFlags.s5000 = true;
     }
 
     // 3. EXPERT MODE (Randomized) - After 90s
-    if (isExpertMode && Math.floor(gameTime) % 900 === 0) { // Every ~15 seconds
-        if (Math.random() < 0.7) { // 70% chance when timer hits
-            powerups.push(new GoldenBone());
+    if (isExpertMode) {
+        let currentInterval = Math.floor(gameTime / 900);
+        if (currentInterval > lastExpertSpawnCheck) {
+            lastExpertSpawnCheck = currentInterval;
+            if (Math.random() < 0.7) {
+                powerups.push(new GoldenBone());
+            }
         }
     }
 
@@ -1578,7 +1589,7 @@ function checkConnectivity() {
     const offlineScreen = document.getElementById('offline-screen');
     const startButton = document.getElementById('start-btn');
     const restartButton = document.getElementById('restart-btn');
-    
+
     if (!navigator.onLine) {
         // Offline
         if (offlineScreen) offlineScreen.classList.remove('hidden');
@@ -1597,7 +1608,7 @@ function checkConnectivity() {
 window.addEventListener('online', checkConnectivity);
 window.addEventListener('offline', checkConnectivity);
 checkConnectivity(); // Initial check
-    checkInAppBrowser(); // Run Detection
+checkInAppBrowser(); // Run Detection
 player.resize();
 background.draw();
 ctx.fillStyle = '#555';
