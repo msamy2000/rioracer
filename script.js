@@ -1641,7 +1641,7 @@ shareBtn.addEventListener('click', async () => {
         console.log('Error sharing:', err);
     }
 });
-startBtn.addEventListener('click', resetGame);
+
 
 // Removed Reset Local Score Button Logic
 
