@@ -243,6 +243,7 @@ const restartBtn = document.getElementById('restart-btn');
 const newRecordSection = document.getElementById('new-record-section');
 const playerNameInput = document.getElementById('player-name-input');
 const submitScoreBtn = document.getElementById('submit-score-btn');
+const recordErrorMsg = document.getElementById('record-error-msg');
 const leaderboardList = document.getElementById('leaderboard-list');
 
 // --- Audio Controller ---
@@ -1427,90 +1428,75 @@ async function submitScore() {
     if (newScore <= 0) return;
 
     if (!firebaseLoaded || !db) {
-        alert("Cannot save score: Offline Mode");
+        if (recordErrorMsg) recordErrorMsg.innerText = "Offline Mode: Cannot save score.";
         return;
     }
 
     try {
+        if (recordErrorMsg) recordErrorMsg.innerText = "";
         submitScoreBtn.disabled = true;
         submitScoreBtn.innerText = "SAVING...";
 
         const scoresRef = collection(db, "scores");
+        const lowerName = name.toLowerCase();
 
-        try {
-            submitScoreBtn.disabled = true;
-            submitScoreBtn.innerText = "SAVING...";
+        // 1. Check for normalized name (Future-proof)
+        const qNorm = query(scoresRef, where("name_lowercase", "==", lowerName));
+        const snapNorm = await getDocs(qNorm);
 
-            const scoresRef = collection(db, "scores");
-            const lowerName = name.toLowerCase();
+        let existingDoc = null;
+        let isLegacy = false;
 
-            // 1. Check for normalized name (Future-proof)
-            const qNorm = query(scoresRef, where("name_lowercase", "==", lowerName));
-            const snapNorm = await getDocs(qNorm);
-
-            let existingDoc = null;
-            let isLegacy = false;
-
-            if (!snapNorm.empty) {
-                existingDoc = snapNorm.docs[0];
-            } else {
-                // 2. Legacy Fallback: Check for exact name match (e.g. "Samy" == "Samy")
-                const qLegacy = query(scoresRef, where("name", "==", name));
-                const snapLegacy = await getDocs(qLegacy);
-                if (!snapLegacy.empty) {
-                    existingDoc = snapLegacy.docs[0];
-                    isLegacy = true;
-                }
+        if (!snapNorm.empty) {
+            existingDoc = snapNorm.docs[0];
+        } else {
+            // 2. Legacy Fallback: Check for exact name match (e.g. "Samy" == "Samy")
+            const qLegacy = query(scoresRef, where("name", "==", name));
+            const snapLegacy = await getDocs(qLegacy);
+            if (!snapLegacy.empty) {
+                existingDoc = snapLegacy.docs[0];
+                isLegacy = true;
             }
+        }
 
-            if (existingDoc) {
-                const existingData = existingDoc.data();
+        if (existingDoc) {
+            const existingData = existingDoc.data();
 
-                if (newScore > existingData.score) {
-                    // New PB! Update Score AND Name (to update casing preference)
-                    await updateDoc(existingDoc.ref, {
-                        score: newScore,
-                        timestamp: new Date(),
-                        name: name, // Store latest preferred case
-                        name_lowercase: lowerName // Ensure normalized field exists
-                    });
-                    localStorage.setItem('rioRacerPlayerName', name);
-                } else {
-                    // Lower score, but maybe we should update the normalized field for legacy docs?
-                    // Optional: upgrade legacy doc even if score isn't beaten?
-                    // User requirement: "store the name submitted latest IF his score is the higher"
-                    // So strictly only update if score is higher.
-                    console.log("Score lower than personal best. Retaining old score.");
-                    if (isLegacy) {
-                        // Silently modernize the doc so future lookups work? 
-                        // No, "only his personal best will exist". 
-                    }
-                }
-            } else {
-                // New user
-                await addDoc(scoresRef, {
-                    name: name,
-                    name_lowercase: lowerName,
+            if (newScore > existingData.score) {
+                // New PB! Update Score AND Name (to update casing preference)
+                await updateDoc(existingDoc.ref, {
                     score: newScore,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    name: name, // Store latest preferred case
+                    name_lowercase: lowerName // Ensure normalized field exists
                 });
                 localStorage.setItem('rioRacerPlayerName', name);
+            } else {
+                console.log("Score lower than personal best. Retaining old score.");
             }
-
-            // Success (UI feedback)
-            newRecordSection.classList.add('hidden'); // Hide input
-            fetchLeaderboard(); // Refresh list
-
-        } catch (e) {
-            console.error("Error saving score:", e);
-            submitScoreBtn.innerText = "ERROR";
-            submitScoreBtn.disabled = false;
+        } else {
+            // New user
+            await addDoc(scoresRef, {
+                name: name,
+                name_lowercase: lowerName,
+                score: newScore,
+                timestamp: new Date()
+            });
+            localStorage.setItem('rioRacerPlayerName', name);
         }
+
+        // Success (UI feedback)
+        if (recordErrorMsg) recordErrorMsg.innerText = "";
+        newRecordSection.classList.add('hidden'); // Hide input
+        fetchLeaderboard(); // Refresh list
 
     } catch (e) {
         console.error("Error saving score:", e);
-        submitScoreBtn.innerText = "ERROR";
+        submitScoreBtn.innerText = "RETRY";
         submitScoreBtn.disabled = false;
+        if (recordErrorMsg) {
+            recordErrorMsg.innerText = e.message || "Failed to save score. Please try again.";
+        }
     }
 }
 
@@ -1569,12 +1555,14 @@ function gameOver() {
 
     // Hide input by default
     newRecordSection.classList.add('hidden');
+    if (recordErrorMsg) recordErrorMsg.innerText = "";
 
     // Check if score qualifies for Top 10
     // If we have less than 10 scores OR score > lowestTop10Score
     const currentScore = Math.floor(score);
     if (currentScore > 0 && currentScore >= lowestTop10Score) {
         newRecordSection.classList.remove('hidden');
+        if (recordErrorMsg) recordErrorMsg.innerText = "";
         playerNameInput.value = localStorage.getItem('rioRacerPlayerName') || "";
         submitScoreBtn.disabled = false;
         submitScoreBtn.innerText = "SAVE";
