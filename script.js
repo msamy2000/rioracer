@@ -526,12 +526,8 @@ class InputHandler {
             if (e.code === 'Space' || e.code === 'ArrowUp') {
                 this.jumpPressed = true;
                 if (currentState === GameState.MENU) startGame();
-                if (currentState === GameState.GAMEOVER && e.code === 'Space') {
-                    // PREVENT ACCIDENTAL RESET: Only reset if name input is NOT visible
-                    if (newRecordSection.classList.contains('hidden')) {
-                        resetGame();
-                    }
-                }
+                // When currentState is GAMEOVER, do not allow any keyboard press to reset the game.
+                // Resetting is exclusively permitted via clicking "TRY AGAIN".
             }
         });
 
