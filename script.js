@@ -549,13 +549,8 @@ class InputHandler {
 
             this.jumpPressed = true;
             if (currentState === GameState.MENU) startGame();
-
-            if (currentState === GameState.GAMEOVER) {
-                // Only reset if new record section is HIDDEN
-                if (newRecordSection.classList.contains('hidden')) {
-                    resetGame();
-                }
-            }
+            // Note: In GAMEOVER, screen touches must NOT reset the game.
+            // Resetting is exclusively handled when the user taps the TRY AGAIN button.
         });
 
         window.addEventListener('touchend', () => {
