@@ -1,12 +1,12 @@
 {
-    "name": "RioRacer: Dog vs. Street",
-    "short_name": "RioRacer",
+    "name": "RioRacer v2.0: Neo-Tokyo 3D",
+    "short_name": "RioRacer 3D",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#333333",
-    "theme_color": "#FF4757",
-    "description": "Help Rio survive the chaotic streets! An intense endless runner game.",
-    "orientation": "landscape",
+    "background_color": "#090718",
+    "theme_color": "#ff2e55",
+    "description": "Help Rio survive the futuristic Neo-Tokyo streets in this 3D cel-shaded anime endless runner!",
+    "orientation": "any",
     "icons": [
         {
             "src": "gfx_icon_small.png",
