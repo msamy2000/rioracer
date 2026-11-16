@@ -4,15 +4,15 @@
  * while elevating the experience to a 3D cel-shaded Japanese anime third-person runner.
  */
 
-import { Engine3D } from './src/engine3d.js';
+import { Engine3D } from './src/engine3d.js?v=2.0.1';
 import {
     createRioMesh,
     animateRioMesh,
     createObstacleMesh,
     createGoldenBoneMesh
-} from './src/models3d.js';
-import { NeoTokyoWorld, LANE_X, LANE_WIDTH } from './src/world3d.js';
-import { VFXSystem3D } from './src/vfx3d.js';
+} from './src/models3d.js?v=2.0.1';
+import { NeoTokyoWorld, LANE_X, LANE_WIDTH } from './src/world3d.js?v=2.0.1';
+import { VFXSystem3D } from './src/vfx3d.js?v=2.0.1';
 
 // --- Firebase Globals (Dynamic Loading) ---
 let app, analytics, db;
@@ -1305,9 +1305,22 @@ window.__RIORACER__ = {
 let newWorker = null;
 let updateAvailable = false;
 
+// Actively purge any legacy v1.x or v2.0.0 caches from window.caches
+if ('caches' in window) {
+    caches.keys().then((keys) => {
+        keys.forEach((key) => {
+            if (key !== 'rioracer-v2.0.1-3d') {
+                console.log('[Cache Purge] Removing stale cache:', key);
+                caches.delete(key);
+            }
+        });
+    });
+}
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(reg => {
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+            reg.update();
             reg.addEventListener('updatefound', () => {
                 newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
@@ -1325,8 +1338,15 @@ if ('serviceWorker' in navigator) {
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
-        window.location.reload();
         refreshing = true;
+        window.location.reload();
+    });
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'FORCE_RELOAD' && !refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
     });
 }
 

@@ -1,55 +1,109 @@
-const CACHE_NAME = 'rioracer-v2.0.0';
+const CACHE_NAME = 'rioracer-v2.0.1-3d';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './style.css',
-    './script.js',
-    './manifest.json',
-    './src/engine3d.js',
-    './src/models3d.js',
-    './src/world3d.js',
-    './src/vfx3d.js',
+    './style.css?v=2.0.1',
+    './script.js?v=2.0.1',
+    './manifest.json?v=2.0.1',
+    './src/engine3d.js?v=2.0.1',
+    './src/models3d.js?v=2.0.1',
+    './src/world3d.js?v=2.0.1',
+    './src/vfx3d.js?v=2.0.1',
     './src/vendor/three.module.min.js',
-    './v1-classic/index.html',
-    './v1-classic/style.css',
-    './v1-classic/script.js',
     './gfx_game_cover.png',
-    './gfx_hero.jpg',
-    './gfx_hero_super.png',
-    './gfx_hero_start.png',
-    './gfx_golden_bone.png',
-    './gfx_obst_Cat.jpg',
-    './gfx_obst_Dog.jpg',
-    './gfx_obst_dog2.png',
-    './gfx_background_seamless_v2.png',
     './gfx_icon_small.png',
     './gfx_icon.png'
 ];
 
+// Install Event: Bypass browser HTTP cache ('reload') and activate immediately
 self.addEventListener('install', (e) => {
+    self.skipWaiting();
     e.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            const requests = ASSETS_TO_CACHE.map((url) => new Request(url, { cache: 'reload' }));
+            await Promise.all(
+                requests.map(async (req) => {
+                    try {
+                        const res = await fetch(req);
+                        if (res.ok) {
+                            await cache.put(req, res);
+                        }
+                    } catch (err) {
+                        console.warn('[SW] Failed to pre-cache:', req.url, err);
+                    }
+                })
+            );
         })
     );
 });
 
+// Activate Event: Purge ALL old v1.x / v2.0.0 caches and immediately claim all open tabs
 self.addEventListener('activate', (e) => {
     e.waitUntil(
-        caches.keys().then((keyList) => {
-            return Promise.all(keyList.map((key) => {
-                if (key !== CACHE_NAME) {
-                    return caches.delete(key);
-                }
-            }));
-        })
+        (async () => {
+            const keyList = await caches.keys();
+            await Promise.all(
+                keyList.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        console.log('[SW] Purging old cache:', key);
+                        return caches.delete(key);
+                    }
+                })
+            );
+            // Take control of all open clients immediately (triggers controllerchange reload in v1.9.20)
+            await self.clients.claim();
+
+            // Also notify any open window clients to reload
+            const windowClients = await self.clients.matchAll({ type: 'window' });
+            for (const client of windowClients) {
+                client.postMessage({ type: 'FORCE_RELOAD', version: CACHE_NAME });
+            }
+        })()
     );
 });
 
+// Fetch Event: Network-First for HTML, JS, CSS, and JSON so updates are always live immediately
 self.addEventListener('fetch', (e) => {
+    if (e.request.method !== 'GET') return;
+
+    const url = new URL(e.request.url);
+    const isSameOrigin = url.origin === self.location.origin;
+    const isCodeOrDoc =
+        e.request.mode === 'navigate' ||
+        url.pathname.endsWith('/') ||
+        url.pathname.endsWith('.html') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.css') ||
+        url.pathname.endsWith('.json');
+
+    if (isSameOrigin && isCodeOrDoc) {
+        e.respondWith(
+            fetch(new Request(e.request, { cache: 'no-cache' }))
+                .then((networkRes) => {
+                    if (networkRes && networkRes.ok) {
+                        const resClone = networkRes.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+                    }
+                    return networkRes;
+                })
+                .catch(() => caches.match(e.request, { ignoreSearch: true }))
+        );
+        return;
+    }
+
+    // Cache-First with network fallback for static images/vendors
     e.respondWith(
-        caches.match(e.request).then((r) => {
-            return r || fetch(e.request);
+        caches.match(e.request, { ignoreSearch: true }).then((cachedRes) => {
+            return (
+                cachedRes ||
+                fetch(e.request).then((networkRes) => {
+                    if (isSameOrigin && networkRes && networkRes.ok) {
+                        const resClone = networkRes.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+                    }
+                    return networkRes;
+                })
+            );
         })
     );
 });

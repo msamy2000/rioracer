@@ -1671,51 +1671,7 @@ highScoreEl.innerText = Math.floor(highScore);
 requestAnimationFrame(animate);
 // Force Re-deploy v1.7.3 (GitHub Actions Trigger)
 
-// === Service Worker & Auto-Update Logic ===
+// === Service Worker disabled in v1-classic archive so it never conflicts with root v2.0 SW ===
 let newWorker = null;
 let updateAvailable = false;
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(reg => {
-            console.log('SW Registered');
-
-            // Check for updates
-            reg.addEventListener('updatefound', () => {
-                newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('New update available!');
-                        updateAvailable = true;
-
-                        // If in MENU, update immediately
-                        if (currentState === GameState.MENU) {
-                            applyUpdate();
-                        } else {
-                            // If PLAYING, show small toast?
-                            // For now, silent wait until Game Over
-                            const toast = document.createElement('div');
-                            toast.innerText = 'Update Ready - Finish Run to Apply';
-                            toast.style.cssText = 'position:fixed;top:10px;right:10px;background:gold;padding:5px;z-index:9999;';
-                            document.body.appendChild(toast);
-                        }
-                    }
-                });
-            });
-        });
-    });
-
-    // Reload when new SW takes control
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        window.location.reload();
-        refreshing = true;
-    });
-}
-
-function applyUpdate() {
-    if (newWorker) {
-        newWorker.postMessage({ type: 'SKIP_WAITING' });
-    }
-}
+function applyUpdate() {}
