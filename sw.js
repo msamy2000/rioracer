@@ -1,9 +1,9 @@
-const CACHE_NAME = 'rioracer-v2.0.5-3d';
+const CACHE_NAME = 'rioracer-v2.0.6-3d';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css?v=2.0.5',
-    './script.js?v=2.0.5',
+    './script.js?v=2.0.6',
     './manifest.json?v=2.0.5',
     './src/engine3d.js?v=2.0.5',
     './src/models3d.js?v=2.0.5',
