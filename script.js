@@ -1309,13 +1309,38 @@ let updateAvailable = false;
 if ('caches' in window) {
     caches.keys().then((keys) => {
         keys.forEach((key) => {
-            if (key !== 'rioracer-v2.0.3-3d') {
+            if (key !== 'rioracer-v2.0.4-3d') {
                 console.log('[Cache Purge] Removing stale cache:', key);
                 caches.delete(key);
             }
         });
     });
 }
+
+// Force Chrome/Safari to repaint the tab favicon immediately by converting icon-3d-64.png to a data URI
+(function forceFaviconRefresh() {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+        try {
+            const c = document.createElement('canvas');
+            c.width = 64;
+            c.height = 64;
+            const cctx = c.getContext('2d');
+            cctx.drawImage(img, 0, 0, 64, 64);
+            const dataUrl = c.toDataURL('image/png');
+            document.querySelectorAll("link[rel*='icon']").forEach((el) => el.remove());
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.type = 'image/png';
+            link.href = dataUrl;
+            document.head.appendChild(link);
+        } catch (err) {
+            console.warn('Dynamic favicon refresh skipped:', err);
+        }
+    };
+    img.src = `icon-3d-64.png?t=${Date.now()}`;
+})();
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
