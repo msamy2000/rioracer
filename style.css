@@ -327,11 +327,18 @@ canvas {
 }
 
 #score-container,
+#bones-container,
 #highscore-container {
     font-family: var(--font-heading);
     color: white;
     font-size: clamp(1.1rem, 2.5vw, 1.55rem);
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.6), 2px 2px 0 #000;
+}
+
+#bones-container {
+    color: #ffd700;
+    font-size: clamp(0.95rem, 2.1vw, 1.25rem);
+    margin: 2px 0;
 }
 
 #highscore-container {

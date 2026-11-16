@@ -4,15 +4,16 @@
  * while elevating the experience to a 3D cel-shaded Japanese anime third-person runner.
  */
 
-import { Engine3D } from './src/engine3d.js?v=2.0.1';
+import { Engine3D } from './src/engine3d.js?v=2.0.5';
 import {
     createRioMesh,
     animateRioMesh,
     createObstacleMesh,
-    createGoldenBoneMesh
-} from './src/models3d.js?v=2.0.1';
-import { NeoTokyoWorld, LANE_X, LANE_WIDTH } from './src/world3d.js?v=2.0.1';
-import { VFXSystem3D } from './src/vfx3d.js?v=2.0.1';
+    createGoldenBoneMesh,
+    createWhiteBoneMesh
+} from './src/models3d.js?v=2.0.5';
+import { NeoTokyoWorld, LANE_X, LANE_WIDTH } from './src/world3d.js?v=2.0.5';
+import { VFXSystem3D } from './src/vfx3d.js?v=2.0.5';
 
 // --- Firebase Globals (Dynamic Loading) ---
 let app, analytics, db;
@@ -78,13 +79,17 @@ const GameState = {
 let currentState = GameState.MENU;
 let gameSpeed = 8;
 let score = 0;
+let bonesCollected = 0;
+let boneStreak = 0;
 let highScore = 0;
 let highScoreBroken = false;
 let highScoreAlertShown = false;
 let frameCount = 0;
 let gameTime = 0;
-let spawnFlags = { s2500: false, s4000: false, s5000: false };
-let lastExpertSpawnCheck = 0;
+let spawnFlags = { s720: false, s1560: false, s2400: false };
+let lastGoldenBoneInterval = 0;
+let whiteBoneSpawnTimer = 0;
+let nextWhiteBoneDelay = 95;
 let difficultyTimer = 0;
 
 // 3D Physics Constants (Calibrated to match classic jump duration ~38 frames)
@@ -98,6 +103,7 @@ const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const hud = document.getElementById('hud');
 const scoreEl = document.getElementById('score');
+const bonesCountEl = document.getElementById('bones-count');
 const highScoreEl = document.getElementById('highscore');
 const startHighScoreEl = document.getElementById('start-highscore-value');
 const highScoreAlert = document.getElementById('highscore-alert');
@@ -314,6 +320,25 @@ class AudioController {
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playWhiteBone(streak = 0) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        // Rising pitch along a bone line (like Subway Surfers coin streaks)
+        const baseFreq = 720 + Math.min(streak, 10) * 55;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.35, this.ctx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.008, this.ctx.currentTime + 0.085);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.085);
     }
 
     playPowerUpWarning() {
@@ -575,7 +600,7 @@ class GoldenBone3D {
         this.scene = scene;
         this.laneIndex = laneIndex;
         this.x = LANE_X[laneIndex];
-        this.yOrigin = 2.4; // Elevated so player jumps to grab it
+        this.yOrigin = 1.15; // Accessible height for running or jumping pickup
         this.y = this.yOrigin;
         this.z = -115 - zOffset;
         this.floatPhase = Math.random() * Math.PI * 2;
@@ -589,12 +614,51 @@ class GoldenBone3D {
     update(worldSpeedZ, timeScale) {
         this.z += worldSpeedZ * timeScale;
         this.floatPhase += 0.08 * timeScale;
-        this.y = this.yOrigin + Math.sin(this.floatPhase) * 0.45;
+        this.y = this.yOrigin + Math.sin(this.floatPhase) * 0.32;
 
         this.mesh.position.set(this.x, this.y, this.z);
         this.mesh.userData.boneGroup.rotation.y += 0.07 * timeScale;
         this.mesh.userData.holoRing.rotation.x += 0.05 * timeScale;
         this.mesh.userData.holoRing.rotation.y += 0.04 * timeScale;
+
+        if (this.z > 14) {
+            this.destroy();
+        }
+    }
+
+    destroy() {
+        if (!this.markedForDeletion) {
+            this.markedForDeletion = true;
+            this.scene.remove(this.mesh);
+        }
+    }
+}
+
+// --- 3D Collectible White Bone (Subway Surfers Style Pickup Stream) ---
+class WhiteBone3D {
+    constructor(scene, laneIndex, zOffset = 0, yHeight = 0.85) {
+        this.scene = scene;
+        this.laneIndex = laneIndex;
+        this.x = LANE_X[laneIndex];
+        this.yOrigin = yHeight;
+        this.y = yHeight;
+        this.z = -115 - zOffset;
+        this.spinPhase = zOffset * 0.15;
+        this.markedForDeletion = false;
+
+        this.mesh = createWhiteBoneMesh();
+        this.mesh.position.set(this.x, this.y, this.z);
+        this.scene.add(this.mesh);
+    }
+
+    update(worldSpeedZ, timeScale) {
+        this.z += worldSpeedZ * timeScale;
+        this.spinPhase += 0.09 * timeScale;
+        this.y = this.yOrigin + Math.sin(this.spinPhase) * 0.12;
+
+        this.mesh.position.set(this.x, this.y, this.z);
+        this.mesh.userData.boneGroup.rotation.y += 0.09 * timeScale;
+        this.mesh.userData.aura.rotation.z -= 0.06 * timeScale;
 
         if (this.z > 14) {
             this.destroy();
@@ -673,11 +737,29 @@ const input = new InputHandler();
 const player = new Player3D(engine3d.scene);
 let obstacles = [];
 let powerups = [];
+let whiteBones = [];
 let spawnTimer = 0;
 let nextSpawnDelay = 45;
 
 function getWorldSpeedZ() {
     return BASE_WORLD_SPEED_Z * (gameSpeed / 8);
+}
+
+/**
+ * Spawns a Subway Surfers-style stream of 4-7 White Bones along a lane
+ * (either flat along the road or in a parabolic jump arc)
+ */
+function spawnWhiteBoneStream(laneIndex, count = 5, isArc = false, baseZOffset = 0) {
+    const spacingZ = 3.2;
+    for (let i = 0; i < count; i++) {
+        const zOff = baseZOffset + i * spacingZ;
+        let yHeight = 0.85;
+        if (isArc) {
+            const t = count > 1 ? i / (count - 1) : 0.5;
+            yHeight = 0.85 + Math.sin(t * Math.PI) * 2.15;
+        }
+        whiteBones.push(new WhiteBone3D(engine3d.scene, laneIndex, zOff, yHeight));
+    }
 }
 
 /**
@@ -687,6 +769,17 @@ function spawnObstacleWave(zOffset = 0, laneCount = 1) {
     const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
     for (let i = 0; i < Math.min(laneCount, 3); i++) {
         obstacles.push(new Obstacle3D(engine3d.scene, lanes[i], zOffset));
+    }
+    // If there is an open lane, 55% chance to place a guiding stream of White Bones in the open lane
+    // or a jump arc of White Bones over a blocked lane!
+    if (Math.random() < 0.55) {
+        if (laneCount < 3 && Math.random() < 0.65) {
+            const openLane = lanes[laneCount];
+            spawnWhiteBoneStream(openLane, 5, false, Math.max(0, zOffset - 6));
+        } else {
+            const arcLane = lanes[0];
+            spawnWhiteBoneStream(arcLane, 5, true, Math.max(0, zOffset - 6));
+        }
     }
 }
 
@@ -772,30 +865,81 @@ function handleObstacles3D(timeScale) {
         }
     }
 
-    // --- Power-Up Spawning (Scripted & Random) ---
-    if (gameTime >= 2500 && !spawnFlags.s2500) {
+    // --- White Bone Pickup Streams (Subway Surfers Style) ---
+    whiteBoneSpawnTimer += timeScale;
+    if (whiteBoneSpawnTimer >= nextWhiteBoneDelay) {
+        whiteBoneSpawnTimer = 0;
+        nextWhiteBoneDelay = 85 + Math.random() * 55;
+        const streamLane = Math.floor(Math.random() * 3);
+        const count = 4 + Math.floor(Math.random() * 4); // 4 to 7 bones in a line
+        const isArc = Math.random() < 0.35;
+        spawnWhiteBoneStream(streamLane, count, isArc, 0);
+    }
+
+    // Update & Check Collisions for White Bones
+    for (let i = whiteBones.length - 1; i >= 0; i--) {
+        const wb = whiteBones[i];
+        wb.update(worldSpeedZ, timeScale);
+
+        const dx = Math.abs(player.x - wb.x);
+        const dy = Math.abs((player.y + 0.85) - wb.y);
+        const dz = Math.abs(player.z - wb.z);
+
+        // Generous magnetic pickup radius (even wider during Super Rio)
+        const pickupRadius = player.isSuper ? 2.2 : 1.35;
+        if (dx < pickupRadius && dy < 1.55 && dz < 1.45) {
+            wb.destroy();
+            bonesCollected++;
+            boneStreak++;
+            score += 15;
+            if (bonesCountEl) bonesCountEl.innerText = bonesCollected;
+            audio.playWhiteBone(boneStreak);
+            vfx.createTrail(wb.x, wb.y, wb.z, false);
+
+            // Every 30 White Bones collected automatically triggers Super Rio Overdrive!
+            if (bonesCollected > 0 && bonesCollected % 30 === 0 && !player.isSuper) {
+                vfx.createFloatingText('🦴 30 BONE STREAK! SUPER RIO!', '#ffd700');
+                player.transform();
+            }
+        } else if (wb.z > 6 && !wb.missedCounted) {
+            wb.missedCounted = true;
+            boneStreak = 0;
+        }
+
+        if (wb.markedForDeletion) {
+            whiteBones.splice(i, 1);
+        }
+    }
+
+    // --- Golden Bone Power-Up Spawning (Much More Frequent & Accessible) ---
+    // 1. Early first Golden Bone at ~12s (720 frames) in player's lane
+    if (gameTime >= 720 && !spawnFlags.s720) {
         powerups.push(new GoldenBone3D(engine3d.scene, player.laneIndex, 0));
-        spawnFlags.s2500 = true;
+        spawnFlags.s720 = true;
     }
-    if (gameTime >= 4000 && !spawnFlags.s4000) {
+    // 2. Second Golden Bone at ~26s (1560 frames)
+    if (gameTime >= 1560 && !spawnFlags.s1560) {
         powerups.push(new GoldenBone3D(engine3d.scene, Math.floor(Math.random() * 3), 0));
-        spawnFlags.s4000 = true;
+        spawnFlags.s1560 = true;
     }
-    if (gameTime >= 5000 && !spawnFlags.s5000) {
+    // 3. Third Golden Bone at ~40s (2400 frames)
+    if (gameTime >= 2400 && !spawnFlags.s2400) {
         powerups.push(new GoldenBone3D(engine3d.scene, Math.floor(Math.random() * 3), 0));
-        spawnFlags.s5000 = true;
+        spawnFlags.s2400 = true;
     }
-    if (isExpertMode) {
-        const currentInterval = Math.floor(gameTime / 900);
-        if (currentInterval > lastExpertSpawnCheck) {
-            lastExpertSpawnCheck = currentInterval;
-            if (Math.random() < 0.75) {
-                powerups.push(new GoldenBone3D(engine3d.scene, Math.floor(Math.random() * 3), 0));
+    // 4. Continuous Golden Bone Spawns every ~18s (1080 frames) throughout the entire run
+    if (gameTime >= 3200) {
+        const currentInterval = Math.floor(gameTime / 1080);
+        if (currentInterval > lastGoldenBoneInterval) {
+            lastGoldenBoneInterval = currentInterval;
+            if (Math.random() < 0.88) {
+                const targetLane = Math.random() < 0.45 ? player.laneIndex : Math.floor(Math.random() * 3);
+                powerups.push(new GoldenBone3D(engine3d.scene, targetLane, 0));
             }
         }
     }
 
-    // Update & Check Collisions for Golden Bones
+    // Update & Check Collisions for Golden Bones (Wider pickup hitbox)
     for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.update(worldSpeedZ, timeScale);
@@ -804,7 +948,7 @@ function handleObstacles3D(timeScale) {
         const dy = Math.abs((player.y + 0.9) - p.y);
         const dz = Math.abs(player.z - p.z);
 
-        if (dx < 1.35 && dy < 1.45 && dz < 1.45) {
+        if (dx < 1.75 && dy < 1.85 && dz < 1.75) {
             p.destroy();
             player.transform();
         }
@@ -1105,8 +1249,10 @@ playerNameInput.addEventListener('keydown', (e) => {
 function clearEntities() {
     for (const obs of obstacles) obs.destroy();
     for (const p of powerups) p.destroy();
+    for (const wb of whiteBones) wb.destroy();
     obstacles = [];
     powerups = [];
+    whiteBones = [];
     vfx.clear();
 }
 
@@ -1123,6 +1269,9 @@ function startGame() {
 
     gameSpeed = 8;
     score = 0;
+    bonesCollected = 0;
+    boneStreak = 0;
+    if (bonesCountEl) bonesCountEl.innerText = '0';
     highScoreBroken = false;
     highScoreAlertShown = false;
     if (highScoreAlert) {
@@ -1135,9 +1284,14 @@ function startGame() {
     frameCount = 0;
     gameTime = 0;
     spawnTimer = 0;
+    whiteBoneSpawnTimer = 0;
+    nextWhiteBoneDelay = 55;
     difficultyTimer = 0;
-    lastExpertSpawnCheck = 0;
-    spawnFlags = { s2500: false, s4000: false, s5000: false };
+    lastGoldenBoneInterval = 0;
+    spawnFlags = { s720: false, s1560: false, s2400: false };
+
+    // Spawn an immediate welcoming trail of White Bones down the center lane on run start!
+    spawnWhiteBoneStream(1, 5, false, -35);
 }
 
 function gameOver() {
@@ -1284,6 +1438,7 @@ window.__RIORACER__ = {
     getState: () => ({
         currentState,
         score: Math.floor(score),
+        bonesCollected,
         highScore,
         gameSpeed,
         gameTime: Math.floor(gameTime),
@@ -1292,7 +1447,8 @@ window.__RIORACER__ = {
         playerY: Number(player.y.toFixed(2)),
         isSuper: player.isSuper,
         obstacleCount: obstacles.length,
-        powerupCount: powerups.length
+        powerupCount: powerups.length,
+        whiteBoneCount: whiteBones.length
     }),
     startGame,
     switchLane: (d) => player.switchLane(d),
@@ -1309,7 +1465,7 @@ let updateAvailable = false;
 if ('caches' in window) {
     caches.keys().then((keys) => {
         keys.forEach((key) => {
-            if (key !== 'rioracer-v2.0.4-3d') {
+            if (key !== 'rioracer-v2.0.5-3d') {
                 console.log('[Cache Purge] Removing stale cache:', key);
                 caches.delete(key);
             }

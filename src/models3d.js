@@ -676,3 +676,55 @@ export function createGoldenBoneMesh() {
     group.userData = { boneGroup, holoRing };
     return group;
 }
+
+/**
+ * Builds a collectible 3D White Bone (Subway Surfers style pickup stream)
+ */
+let sharedWhiteBoneGeo = null;
+let sharedWhiteKnobGeo = null;
+let sharedWhiteRingGeo = null;
+let sharedWhiteBoneMat = null;
+let sharedWhiteRingMat = null;
+
+export function createWhiteBoneMesh() {
+    if (!sharedWhiteBoneGeo) {
+        sharedWhiteBoneGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.56, 8);
+        sharedWhiteBoneGeo.rotateZ(Math.PI / 2);
+        sharedWhiteKnobGeo = new THREE.SphereGeometry(0.13, 8, 8);
+        sharedWhiteRingGeo = new THREE.RingGeometry(0.36, 0.44, 16);
+        sharedWhiteBoneMat = createToonMaterial(0xffffff, { emissive: 0x00d9ff, emissiveIntensity: 0.35 });
+        sharedWhiteRingMat = new THREE.MeshBasicMaterial({
+            color: 0x00f0ff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.65
+        });
+    }
+
+    const group = new THREE.Group();
+    group.name = 'WhiteBone3D';
+
+    const boneGroup = new THREE.Group();
+    const shaft = createCelPart(sharedWhiteBoneGeo, sharedWhiteBoneMat, 1.07);
+    boneGroup.add(shaft);
+
+    [
+        [-0.28, 0.08, 0],
+        [-0.28, -0.08, 0],
+        [0.28, 0.08, 0],
+        [0.28, -0.08, 0]
+    ].forEach(([x, y, z]) => {
+        const knob = createCelPart(sharedWhiteKnobGeo, sharedWhiteBoneMat, 1.06);
+        knob.position.set(x, y, z);
+        boneGroup.add(knob);
+    });
+
+    group.add(boneGroup);
+
+    const aura = new THREE.Mesh(sharedWhiteRingGeo, sharedWhiteRingMat);
+    group.add(aura);
+
+    group.userData = { boneGroup, aura };
+    return group;
+}
+
