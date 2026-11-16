@@ -1,16 +1,16 @@
-const CACHE_NAME = 'rioracer-v2.0.1-3d';
+const CACHE_NAME = 'rioracer-v2.0.2-3d';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './style.css?v=2.0.1',
-    './script.js?v=2.0.1',
-    './manifest.json?v=2.0.1',
+    './style.css?v=2.0.2',
+    './script.js?v=2.0.2',
+    './manifest.json?v=2.0.2',
     './src/engine3d.js?v=2.0.1',
     './src/models3d.js?v=2.0.1',
     './src/world3d.js?v=2.0.1',
     './src/vfx3d.js?v=2.0.1',
     './src/vendor/three.module.min.js',
-    './gfx_game_cover.png',
+    './gfx_game_cover_3d.jpg?v=2.0.2',
     './gfx_icon_small.png',
     './gfx_icon.png'
 ];

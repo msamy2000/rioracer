@@ -1305,11 +1305,11 @@ window.__RIORACER__ = {
 let newWorker = null;
 let updateAvailable = false;
 
-// Actively purge any legacy v1.x or v2.0.0 caches from window.caches
+// Actively purge any legacy v1.x or v2.0.x caches from window.caches
 if ('caches' in window) {
     caches.keys().then((keys) => {
         keys.forEach((key) => {
-            if (key !== 'rioracer-v2.0.1-3d') {
+            if (key !== 'rioracer-v2.0.2-3d') {
                 console.log('[Cache Purge] Removing stale cache:', key);
                 caches.delete(key);
             }
