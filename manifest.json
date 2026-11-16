@@ -9,12 +9,17 @@
     "orientation": "any",
     "icons": [
         {
-            "src": "gfx_icon_small.png",
+            "src": "favicon.png?v=2.0.3",
+            "sizes": "64x64",
+            "type": "image/png"
+        },
+        {
+            "src": "gfx_icon_small.png?v=2.0.3",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "gfx_icon.png",
+            "src": "gfx_icon.png?v=2.0.3",
             "sizes": "512x512",
             "type": "image/png"
         }

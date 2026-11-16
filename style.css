@@ -110,12 +110,12 @@ canvas {
 
 #cover-image {
     width: auto;
-    max-width: 280px;
-    max-height: 36vh;
+    max-width: min(420px, 85vw);
+    max-height: 55vh;
     object-fit: contain;
-    border-radius: 18px;
+    border-radius: 20px;
     margin-bottom: 14px;
-    box-shadow: 0 0 28px rgba(0, 240, 255, 0.45), 0 10px 25px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 32px rgba(0, 240, 255, 0.55), 0 12px 28px rgba(0, 0, 0, 0.75);
     border: 3px solid #00f0ff;
 }
 
@@ -555,6 +555,12 @@ canvas {
     .ui-overlay {
         flex-direction: row;
         gap: 44px;
+    }
+
+    #cover-image {
+        max-width: 440px;
+        max-height: 60vh;
+        margin-bottom: 0;
     }
 }
 

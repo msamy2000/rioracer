@@ -1,18 +1,19 @@
-const CACHE_NAME = 'rioracer-v2.0.2-3d';
+const CACHE_NAME = 'rioracer-v2.0.3-3d';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './style.css?v=2.0.2',
-    './script.js?v=2.0.2',
-    './manifest.json?v=2.0.2',
+    './style.css?v=2.0.3',
+    './script.js?v=2.0.3',
+    './manifest.json?v=2.0.3',
     './src/engine3d.js?v=2.0.1',
     './src/models3d.js?v=2.0.1',
     './src/world3d.js?v=2.0.1',
     './src/vfx3d.js?v=2.0.1',
     './src/vendor/three.module.min.js',
-    './gfx_game_cover_3d.jpg?v=2.0.2',
-    './gfx_icon_small.png',
-    './gfx_icon.png'
+    './gfx_game_cover_3d.jpg?v=2.0.3',
+    './favicon.png?v=2.0.3',
+    './gfx_icon_small.png?v=2.0.3',
+    './gfx_icon.png?v=2.0.3'
 ];
 
 // Install Event: Bypass browser HTTP cache ('reload') and activate immediately

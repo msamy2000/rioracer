@@ -1309,7 +1309,7 @@ let updateAvailable = false;
 if ('caches' in window) {
     caches.keys().then((keys) => {
         keys.forEach((key) => {
-            if (key !== 'rioracer-v2.0.2-3d') {
+            if (key !== 'rioracer-v2.0.3-3d') {
                 console.log('[Cache Purge] Removing stale cache:', key);
                 caches.delete(key);
             }
