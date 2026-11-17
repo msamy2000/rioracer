@@ -79,7 +79,6 @@ const GameState = {
 let currentState = GameState.MENU;
 let gameSpeed = 8;
 let score = 0;
-let bonesCollected = 0;
 let boneStreak = 0;
 let highScore = 0;
 let highScoreBroken = false;
@@ -103,7 +102,6 @@ const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const hud = document.getElementById('hud');
 const scoreEl = document.getElementById('score');
-const bonesCountEl = document.getElementById('bones-count');
 const highScoreEl = document.getElementById('highscore');
 const startHighScoreEl = document.getElementById('start-highscore-value');
 const highScoreAlert = document.getElementById('highscore-alert');
@@ -949,15 +947,14 @@ function handleObstacles3D(timeScale) {
         const pickupRadius = player.isSuper ? 2.2 : 1.35;
         if (dx < pickupRadius && dy < 1.55 && dz < 1.45) {
             wb.destroy();
-            bonesCollected++;
             boneStreak++;
             score += 15;
-            if (bonesCountEl) bonesCountEl.innerText = bonesCollected;
+            scoreEl.innerText = Math.floor(score);
             audio.playWhiteBone(boneStreak);
             vfx.createTrail(wb.x, wb.y, wb.z, false);
 
-            // Every 30 White Bones collected automatically triggers Super Rio Overdrive!
-            if (bonesCollected > 0 && bonesCollected % 30 === 0 && !player.isSuper) {
+            // Every 30 White Bones collected in a streak automatically triggers Super Rio Overdrive!
+            if (boneStreak > 0 && boneStreak % 30 === 0 && !player.isSuper) {
                 vfx.createFloatingText('🦴 30 BONE STREAK! SUPER RIO!', '#ffd700');
                 player.transform();
             }
@@ -1330,9 +1327,7 @@ function startGame() {
 
     gameSpeed = 8;
     score = 0;
-    bonesCollected = 0;
     boneStreak = 0;
-    if (bonesCountEl) bonesCountEl.innerText = '0';
     highScoreBroken = false;
     highScoreAlertShown = false;
     if (highScoreAlert) {
@@ -1499,7 +1494,6 @@ window.__RIORACER__ = {
     getState: () => ({
         currentState,
         score: Math.floor(score),
-        bonesCollected,
         highScore,
         gameSpeed,
         gameTime: Math.floor(gameTime),
@@ -1526,7 +1520,7 @@ let updateAvailable = false;
 if ('caches' in window) {
     caches.keys().then((keys) => {
         keys.forEach((key) => {
-            if (key !== 'rioracer-v2.0.6-3d') {
+            if (key !== 'rioracer-v2.0.7-3d') {
                 console.log('[Cache Purge] Removing stale cache:', key);
                 caches.delete(key);
             }
